@@ -1,0 +1,314 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-color: #000000;
+  --card-bg: #16181c;
+  --text-primary: #e7e9ea;
+  --text-secondary: #71767b;
+  --accent-color: #1d9bf0;
+  --accent-hover: #1a8cd8;
+  --border-color: #2f3336;
+  --glass-bg: rgba(22, 24, 28, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --success-color: #00ba7c;
+  --danger-color: #f91880;
+}
+
+.light-mode {
+  --bg-color: #ffffff;
+  --card-bg: #f7f9f9;
+  --text-primary: #0f1419;
+  --text-secondary: #536471;
+  --accent-color: #1d9bf0;
+  --accent-hover: #1a8cd8;
+  --border-color: #eff3f4;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --success-color: #00ba7c;
+  --danger-color: #f91880;
+}
+
+.logo-x {
+  filter: invert(1);
+}
+
+.light-mode .logo-x {
+  filter: invert(0);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg-color);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+::selection {
+  color: #fff;
+  background: var(--accent-color);
+}
+
+.wrapper {
+  background: var(--card-bg);
+  max-width: 600px;
+  width: 100%;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  position: relative;
+  backdrop-filter: blur(12px);
+}
+
+/* Header/Nav overrides if inside wrapper, though header is outside usually. 
+   Assuming standard structure from templates */
+
+.input-box {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.input-box .tweet-area {
+  position: relative;
+  min-height: 120px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.tweet-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tweet-area::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 3px;
+}
+
+.tweet-area .placeholder {
+  position: absolute;
+  margin-top: 0;
+  font-size: 20px;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.tweet-area .input {
+  outline: none;
+  font-size: 20px;
+  min-height: inherit;
+  word-wrap: break-word;
+  word-break: break-all;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.tweet-area .editable {
+  position: relative;
+  z-index: 5;
+}
+
+.tweet-area .readonly {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  color: transparent;
+  background: transparent;
+}
+
+.readonly .highlight {
+  background: rgba(29, 155, 240, 0.2);
+}
+
+.input-box .privacy {
+  color: var(--accent-color);
+  margin: 10px 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.privacy:hover {
+  background: rgba(29, 155, 240, 0.1);
+}
+
+.privacy i {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.bottom {
+  display: flex;
+  margin-top: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bottom .icons {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.icons li {
+  list-style: none;
+  color: var(--accent-color);
+  font-size: 18px;
+  height: 34px;
+  width: 34px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.icons li:hover {
+  background: rgba(29, 155, 240, 0.1);
+}
+
+.bottom .content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.bottom .counter {
+  color: var(--text-secondary);
+  display: none;
+  font-weight: 500;
+  margin-right: 10px;
+  padding-right: 10px;
+  border-right: 1px solid var(--border-color);
+}
+
+.bottom button {
+  padding: 10px 20px;
+  border: none;
+  outline: none;
+  border-radius: 9999px;
+  font-size: 15px;
+  font-weight: 700;
+  background: var(--text-primary);
+  /* White for X button usually, or accent */
+  color: #000;
+  cursor: pointer;
+  opacity: 0.5;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+/* Main Post Button */
+#tweetButton {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+#tweetButton:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Stream Control Buttons */
+.btn-start {
+  background-color: var(--success-color) !important;
+  color: white !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.btn-start:hover {
+  filter: brightness(0.9);
+}
+
+.btn-stop {
+  background-color: var(--danger-color) !important;
+  color: white !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  display: none;
+}
+
+.btn-stop:hover {
+  filter: brightness(0.9);
+}
+
+.bottom button.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Validation Page Styles */
+.validation-container {
+  max-width: 800px;
+  margin: 40px auto;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--text-primary);
+}
+
+th,
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+}
+
+th {
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Header Navigation Styles - matching the new theme */
+.header-navigation {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color) !important;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.navigation .nav-item a {
+  color: var(--text-secondary) !important;
+  border-right: 1px solid var(--border-color) !important;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.navigation .nav-item a:hover {
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body {
+  padding-top: 80px;
+  /* Space for fixed header */
+}

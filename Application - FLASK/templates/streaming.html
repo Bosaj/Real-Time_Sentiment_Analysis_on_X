@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    @import url(http://weloveiconfonts.com/api/?family=fontawesome);
+
+    [class*="fontawesome-"]:before {
+      font-family: 'fontawesome', sans-serif;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      margin: 0;
+      /* Reset default margin */
+    }
+
+    a,
+    a:visited {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 50px auto;
+    }
+
+    .wrapper {
+      margin-bottom: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: none;
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+    }
+
+    img {
+      float: left;
+      width: 80px;
+      height: auto;
+      border-right: 1px solid var(--border-color);
+      padding: 10px;
+    }
+
+    article {
+      float: right;
+      padding: 14px;
+      border-bottom: 1px solid transparent;
+      width: 100%;
+      flex: 1;
+    }
+
+    h2 {
+      margin: 1px 0 7px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    nav {
+      float: right;
+      margin: 14px;
+    }
+
+    nav ul li {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    nav ul li a {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+
+<body>
+  {% include "header.html" %}
+  <div class="container">
+    <div class="tweets-container">
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script>
+    var source = new EventSource("/stream_inserts");
+    source.onmessage = function (event) {
+      var tweet = JSON.parse(event.data);
+      var wrapper = document.createElement('div');
+      wrapper.classList.add('wrapper');
+      wrapper.innerHTML = `
+      <img src="https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg" alt="X Logo" class="logo-x" style="padding: 15px;">
+      <article>
+        <p>
+          <strong style="color: var(--text-secondary);">Post Content:</strong> ${tweet.content}
+        </p>
+        <p>
+          <span>Prediction: ${tweet.prediction}</span><br>
+          <span>Confidence: ${tweet.confidence}</span>
+        </p>
+      </article>
+    `;
+      var tweetsContainer = document.querySelector('.tweets-container');
+      tweetsContainer.insertBefore(wrapper, tweetsContainer.firstChild);
+    };
+  </script>
+</body>
+
+</html>

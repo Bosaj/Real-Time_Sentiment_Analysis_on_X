@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        .styled-table {
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.9em;
+            font-family: 'Inter', sans-serif;
+            min-width: 100%;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .styled-table thead tr {
+            background-color: var(--border-color);
+            color: var(--text-primary);
+            text-align: left;
+        }
+
+        .styled-table th,
+        .styled-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .styled-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: var(--card-bg);
+        }
+
+        .styled-table tbody tr:nth-of-type(odd) {
+            background-color: var(--bg-color);
+        }
+
+        .styled-table tbody tr:last-of-type {
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .styled-table tbody tr.active-row {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body>
+    {% include "header.html" %}
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Content</th>
+                <th>Prediction</th>
+                <th>Confidence</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for prediction in predictions %}
+            <tr>
+                <td>{{ prediction.content }}</td>
+                <td>{{ prediction.prediction }}</td>
+                <td>{{ prediction.confidence | round(2) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+
+</html>
