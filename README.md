@@ -37,11 +37,13 @@ This project is a **real-time sentiment analysis web application** that processe
 ***
 
 ## 🎥 Demonstration
+
 Watch the full project demonstration:
 
-[📹 Video Demonstration](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/assets/Recording%202025-12-29%20231309.mp4)
+https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/assets/USER_ID/recording.mp4
 
-***
+_Click to play the embedded video_
+
 
 ## 🏗️ System Architecture
 
