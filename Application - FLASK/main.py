@@ -7,11 +7,16 @@ import json
 import pandas as pd
 from pymongo import MongoClient
 from bson.json_util import dumps
+from dotenv import load_dotenv
+import certifi
+
+load_dotenv()
 
 os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 app = Flask(__name__)
 app.secret_key = 'TESTING' 
+print("DEBUG: Loaded updated main.py v2") 
 
 def get_kafka_producer():
     try:
@@ -24,10 +29,10 @@ def get_kafka_producer():
 
 producer = get_kafka_producer()
 
-uri = "mongodb://localhost:27017/BigData"
+uri = os.getenv("MONGO_URI")
 
 def watch_changes():
-    client = MongoClient(uri)
+    client = MongoClient(uri, tlsCAFile=certifi.where())
     db = client["BigData"]
     collection = db["TweetsPredictions"]
     change_stream = collection.watch([{'$match': {'operationType': 'insert'}}])
@@ -35,21 +40,34 @@ def watch_changes():
         yield 'data: {}\n\n'.format(dumps(change['fullDocument']))
 
 def map_prediction_to_sentiment(prediction):
+    try:
+        # Handle floats (0.0) or strings ("0.0") by casting to int
+        val = int(float(prediction))
+    except (ValueError, TypeError):
+        return 'Unknown'
+
     sentiments = {
         0: 'Negative',
         1: 'Positive',
         2: 'Neutral',
         3: 'Irrelevant'
     }
-    return sentiments.get(prediction, 'Unknown')
+    return sentiments.get(val, 'Unknown')
 
 @app.route('/stream_inserts')
 def stream_inserts():
     def generate():
         for change in watch_changes():
-            data = json.loads(change.strip("data:"))
-            # data["prediction"] = map_prediction_to_sentiment(data["prediction"])
-            yield 'data: {}\n\n'.format(json.dumps(data))
+            try:
+                # Remove "data: " prefix if present and whitespace
+                raw_data = change.replace("data: ", "").strip()
+                if raw_data:
+                    data = json.loads(raw_data)
+                    mapped = map_prediction_to_sentiment(data.get("prediction"))
+                    data["sentiment_label"] = mapped
+                    yield 'data: {}\n\n'.format(json.dumps(data))
+            except Exception as e:
+                print(f"Error parsing stream data: {e}")
     return Response(generate(), mimetype='text/event-stream')
 
 @app.route("/", methods = ['GET'])
@@ -62,10 +80,16 @@ def test():
 
 @app.route("/validation", methods=['GET'])
 def validation():
-    client = MongoClient("mongodb://localhost:27017")
+    client = MongoClient(os.getenv("MONGO_URI"), tlsCAFile=certifi.where())
     db = client["BigData"]
     collection = db["TweetsPredictions"]
     predictions = list(collection.find({}, {"_id": 0, "content": 1, "prediction": 1, "confidence": 1}).sort("_id", -1).limit(50))
+    # Map predictions to labels
+    for p in predictions:
+        val = p.get("prediction")
+        mapped = map_prediction_to_sentiment(val)
+        print(f"DEBUG: Mapping {val} -> {mapped}")
+        p["sentiment_label"] = mapped
     return render_template('validation.html', predictions=predictions)
 
 @app.route('/produce_tweets', methods = ['POST'])
