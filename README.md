@@ -38,11 +38,17 @@ This project is a **real-time sentiment analysis web application** that processe
 
 ## 🎥 Demonstration
 
-Watch the full project demonstration:
+### Watch the Complete System in Action
 
-https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/assets/USER_ID/recording.mp4
+<div align="center">
 
-_Click to play the embedded video_
+**[📹 Watch Full Demo Video (MP4)](https://github.com/user-attachments/assets/07d26b77-38c3-4219-8956-0ff7f9da89e7)**
+
+<sub>⏱️ Duration: ~5 minutes | 📺 Quality: 1080p | 💾 Size: ~45MB</sub>
+
+</div>
+
+---
 
 
 ## 🏗️ System Architecture
