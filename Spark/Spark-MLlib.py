@@ -17,7 +17,7 @@ schema = StructType([
     StructField("Content", StringType(), True)
 ])
 
-df = spark.read.csv("twitter_training.csv", header=False, schema=schema)
+df = spark.read.csv("X_training.csv", header=False, schema=schema)
 df = df.filter(df["Content"].isNotNull())
 
 tokenizer = Tokenizer(inputCol="Content", outputCol="words")
@@ -31,7 +31,7 @@ featurizedData = hashingTF.transform(df_filtered)
 idf = IDF(inputCol="rawFeatures", outputCol="features")
 idfModel = idf.fit(featurizedData)
 rescaledData = idfModel.transform(featurizedData)
-idfModel.save("IDF_V1")
+idfModel.write().overwrite().save("IDF_V1")
 
 indexer = StringIndexer(inputCol="Sentiment", outputCol="label")
 indexer_model = indexer.fit(rescaledData)
@@ -82,8 +82,8 @@ with open("sentiment_to_index_mapping.txt", "w") as file:
     for index, label in enumerate(labels_to_index):
         file.write(f"Numeric index {index} corresponds to Sentiment: '{label}'\n")
 
-bestModel_lr.save("V1")
-cvModel_nb.save("NaiveBayes_Model_V1")
+bestModel_lr.write().overwrite().save("V1")
+cvModel_nb.write().overwrite().save("NaiveBayes_Model_V1")
 
 predictions_lr.select("Content", "label", "prediction").show()
 

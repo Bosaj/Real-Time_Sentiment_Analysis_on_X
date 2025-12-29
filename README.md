@@ -68,7 +68,7 @@ Ensure MongoDB is operational and the URI is set up as per your `main.py` , `Kaf
 - `/stream_csv`: Streams validation data for real-time analysis.
 
 ## Data Description
-The training dataset `twitter_training.csv` includes tweets with their sentiment labels. The `twitter_validation.csv` dataset contains tweets used for real-time sentiment prediction.
+The training dataset `X_training.csv` includes tweets with their sentiment labels. The `X_validation.csv` dataset contains tweets used for real-time sentiment prediction.
 
 ## Tools and Frameworks
 The project utilizes Apache Kafka Stream, Spark MLlib, NLTK, Pandas, Matplotlib, Flask, and Django. It is developed in Python with supplementary use of Java and JavaScript.
@@ -79,7 +79,7 @@ Twitter Entity Sentiment Analysis data obtained from [Kaggle](https://www.kaggle
 ## Testing Streams
 There are two ways to test the streams within the application:
 1. Real-time text entry for immediate sentiment analysis.
-2. Use the "Start Streaming Tweets" button to initiate streaming from `twitter_validation.csv`. 
+2. Use the "Start Streaming Tweets" button to initiate streaming from `X_validation.csv`. 
 
 ## File Descriptions
 

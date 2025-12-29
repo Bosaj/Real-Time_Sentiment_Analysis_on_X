@@ -88,7 +88,7 @@ def clear_tweets():
 @app.route('/stream_csv', methods=['GET'])
 def stream_csv():
     def generate():
-        data = pd.read_csv('../Spark/twitter_validation.csv', encoding='utf-8')
+        data = pd.read_csv('../Spark/X_validation.csv', encoding='utf-8')
         for index, row in data.iterrows():
             json_data = json.dumps({"content": row[3]})
             yield f"{json_data}\n"
