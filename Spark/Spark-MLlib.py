@@ -1,3 +1,8 @@
+import os
+os.environ['HADOOP_HOME'] = r"C:\Users\ROG FLOW\hadoop"
+os.environ['hadoop.home.dir'] = r"C:\Users\ROG FLOW\hadoop"
+os.environ["PATH"] += os.pathsep + os.path.join(os.environ['HADOOP_HOME'], 'bin')
+
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 from pyspark.ml.feature import Tokenizer, StopWordsRemover, HashingTF, IDF, StringIndexer
@@ -8,6 +13,11 @@ from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
 spark = SparkSession.builder \
     .appName("SentimentAnalysis") \
     .master("local[*]") \
+    .config("spark.executor.memory", "4g") \
+    .config("spark.driver.memory", "4g") \
+    .config("spark.sql.shuffle.partitions", "20") \
+    .config("spark.default.parallelism", "20") \
+    .config("spark.driver.maxResultSize", "4g") \
     .getOrCreate()
 
 schema = StructType([
@@ -17,7 +27,8 @@ schema = StructType([
     StructField("Content", StringType(), True)
 ])
 
-df = spark.read.csv("twitter_training.csv", header=False, schema=schema)
+df = spark.read.csv("X_training.csv", header=False, schema=schema)
+df = df.repartition(20)
 df = df.filter(df["Content"].isNotNull())
 
 tokenizer = Tokenizer(inputCol="Content", outputCol="words")
@@ -26,12 +37,12 @@ df_words = tokenizer.transform(df)
 remover = StopWordsRemover(inputCol="words", outputCol="filtered")
 df_filtered = remover.transform(df_words)
 
-hashingTF = HashingTF(inputCol="filtered", outputCol="rawFeatures")
+hashingTF = HashingTF(inputCol="filtered", outputCol="rawFeatures", numFeatures=8192)
 featurizedData = hashingTF.transform(df_filtered)
 idf = IDF(inputCol="rawFeatures", outputCol="features")
 idfModel = idf.fit(featurizedData)
 rescaledData = idfModel.transform(featurizedData)
-idfModel.save("IDF_V1")
+idfModel.write().overwrite().save("IDF_V1")
 
 indexer = StringIndexer(inputCol="Sentiment", outputCol="label")
 indexer_model = indexer.fit(rescaledData)
@@ -41,9 +52,9 @@ train_data, test_data = df_final.randomSplit([0.8, 0.2], seed=1234)
 
 lr = LogisticRegression(featuresCol='features', labelCol='label')
 paramGrid_lr = (ParamGridBuilder()
-             .addGrid(lr.regParam, [0.1, 0.01])  
-             .addGrid(lr.elasticNetParam, [0.0, 0.5, 1.0]) 
-             .addGrid(lr.maxIter, [10, 50, 100]) 
+             .addGrid(lr.regParam, [0.01])  
+             .addGrid(lr.elasticNetParam, [0.0]) 
+             .addGrid(lr.maxIter, [10]) 
              .build())
 evaluator_lr = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy")
 crossval_lr = CrossValidator(estimator=lr,
@@ -82,8 +93,8 @@ with open("sentiment_to_index_mapping.txt", "w") as file:
     for index, label in enumerate(labels_to_index):
         file.write(f"Numeric index {index} corresponds to Sentiment: '{label}'\n")
 
-bestModel_lr.save("V1")
-cvModel_nb.save("NaiveBayes_Model_V1")
+bestModel_lr.write().overwrite().save("V1")
+cvModel_nb.write().overwrite().save("NaiveBayes_Model_V1")
 
 predictions_lr.select("Content", "label", "prediction").show()
 

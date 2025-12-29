@@ -45,13 +45,11 @@
 
 body {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   min-height: 100vh;
   background: var(--bg-color);
   color: var(--text-primary);
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 ::selection {
@@ -69,6 +67,12 @@ body {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   position: relative;
   backdrop-filter: blur(12px);
+  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+}
+
+.wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
 }
 
 /* Header/Nav overrides if inside wrapper, though header is outside usually. 
@@ -284,31 +288,49 @@ th {
   font-weight: 600;
 }
 
-/* Header Navigation Styles - matching the new theme */
-.header-navigation {
-  background-color: rgba(0, 0, 0, 0.8) !important;
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-color) !important;
-  position: fixed;
-  top: 0;
+/* Streaming Page Styles */
+
+.tweet-card {
+  margin-bottom: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  transition: all 0.3s ease;
+}
+
+.tweet-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.tweet-card img {
+  float: left;
+  width: 80px;
+  height: auto;
+  border-right: 1px solid var(--border-color);
+  padding: 10px;
+}
+
+.tweet-card article {
+  float: right;
+  padding: 14px;
+  border-bottom: 1px solid transparent;
   width: 100%;
-  z-index: 1000;
+  flex: 1;
 }
 
-.navigation .nav-item a {
-  color: var(--text-secondary) !important;
-  border-right: 1px solid var(--border-color) !important;
-  font-weight: 500;
-  transition: color 0.2s;
+.tweet-card h2 {
+  margin: 1px 0 7px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-primary);
 }
 
-.navigation .nav-item a:hover {
-  color: var(--text-primary) !important;
-  box-shadow: none !important;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-body {
-  padding-top: 80px;
-  /* Space for fixed header */
+.tweet-card p {
+  font-size: 1.1rem;
+  line-height: 1.5rem;
+  color: var(--text-primary);
 }

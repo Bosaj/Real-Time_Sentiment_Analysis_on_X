@@ -1,0 +1,4 @@
+Numeric index 0 corresponds to Sentiment: 'Negative'
+Numeric index 1 corresponds to Sentiment: 'Positive'
+Numeric index 2 corresponds to Sentiment: 'Neutral'
+Numeric index 3 corresponds to Sentiment: 'Irrelevant'

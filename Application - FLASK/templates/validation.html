@@ -69,7 +69,7 @@
             {% for prediction in predictions %}
             <tr>
                 <td>{{ prediction.content }}</td>
-                <td>{{ prediction.prediction }}</td>
+                <td>{{ prediction.sentiment_label }}</td>
                 <td>{{ prediction.confidence | round(2) }}</td>
             </tr>
             {% endfor %}

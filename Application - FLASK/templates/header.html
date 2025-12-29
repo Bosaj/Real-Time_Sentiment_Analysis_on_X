@@ -1,70 +1,62 @@
-<html>
+<style>
+    .header-navigation {
+        background-color: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
 
-<head>
-    <meta charset="UTF-8">
-    <title>Real-time Tweet Streaming</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X Stream</title>
-    <style>
-        .header-navigation {
-            background-color: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            font-family: 'Arial';
-            border: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-        }
+    .navigation {
+        margin-left: auto;
+        margin-right: auto;
+        font-size: 20px;
+        height: 60px;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+    }
 
-        .navigation {
-            margin-left: auto;
-            margin-right: auto;
-            font-size: 20px;
-            height: 60px;
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            justify-content: center;
-        }
+    .navigation .nav-item {
+        float: left;
+    }
 
-        .navigation .nav-item {
-            float: left;
-        }
+    .navigation .nav-item a {
+        padding: 20px 40px 16px 40px;
+        text-decoration: none;
+        color: var(--text-secondary);
+        border-right: 1px solid var(--border-color);
+        transition: box-shadow 100ms ease;
+    }
 
-        .navigation .nav-item a {
-            padding: 20px 40px 16px 40px;
-            text-decoration: none;
-            color: var(--text-secondary);
-            border-right: 1px solid var(--border-color);
-            transition: box-shadow 100ms ease;
-        }
+    .navigation .nav-item:last-child a {
+        border-right: none;
+    }
 
-        .navigation .nav-item:last-child a {
-            border-right: none;
-        }
+    .navigation .nav-item a:hover {
+        box-shadow: 0 -15px 0 -10px var(--accent-color) inset;
+        color: var(--text-primary);
+    }
 
-        .navigation .nav-item a:hover {
-            box-shadow: 0 -15px 0 -10px var(--accent-color) inset;
-            color: var(--text-primary);
-        }
+    .v-center {
+        text-align: center;
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+        -ms-transform: translateY(-50%);
+        -moz-transform: translateY(-50%);
+    }
+</style>
 
-        .v-center {
-            text-align: center;
-            position: relative;
-            top: 50%;
-            transform: translateY(-50%);
-            -ms-transform: translateY(-50%);
-            -moz-transform: translateY(-50%);
-        }
-    </style>
-</head>
-
-<body>
-    <div class="header-navigation">
-        <div class="navigation">
-            <span class="nav-item v-center"><a href="/">Home</a></span>
-            <span class="nav-item v-center"><a href="/stream">Streaming</a></span>
-            <span class="nav-item v-center"><a href="/validation">Test Data</a></span>
-            <span class="nav-item v-center" style="cursor: pointer;" onclick="toggleTheme()">
-                <a href="#" id="theme-toggle">Light Mode</a>
-            </span>
-        </div>
+<div class="header-navigation">
+    <div class="navigation">
+        <span class="nav-item v-center"><a href="/">Home</a></span>
+        <span class="nav-item v-center"><a href="/stream">Streaming</a></span>
+        <span class="nav-item v-center"><a href="/validation">Test Data</a></span>
+        <span class="nav-item v-center" style="cursor: pointer;" onclick="toggleTheme()">
+            <a href="#" id="theme-toggle">Light Mode</a>
+        </span>
     </div>
+</div>
