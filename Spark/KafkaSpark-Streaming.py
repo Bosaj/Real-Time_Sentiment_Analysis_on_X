@@ -74,6 +74,7 @@ json_schema = StructType([
 ])
 
 tweets_df = tweets_df.withColumn("data", from_json(col("value"), json_schema)).select("data.*")
+tweets_df = tweets_df.filter(col("content").isNotNull())
 
 tweets_df.writeStream \
     .format("console") \
