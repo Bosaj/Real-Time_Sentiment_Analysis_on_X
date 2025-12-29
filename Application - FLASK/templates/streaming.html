@@ -1,63 +1,145 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-
+  <title>Live Predictions - Sentiment Analysis</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
 
 <body>
-  {% include "header.html" %}
+  {% include 'header.html' %}
+
   <div class="container">
-    <div style="text-align: right; margin-bottom: 20px;">
-      <button id="clearCardsBtn" style="
-        background-color: var(--danger-color);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 20px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: opacity 0.2s;
-      " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-        Clear Cards
+    <div class="hero fade-in-up">
+      <h1>Live Predictions</h1>
+      <p>Watch real-time sentiment analysis as tweets are processed</p>
+    </div>
+
+    <div class="stats-grid fade-in-up" style="animation-delay: 0.2s">
+      <div class="stat-card">
+        <h3>Total Processed</h3>
+        <div class="value" id="total-count">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Positive</h3>
+        <div class="value" style="color: var(--positive)" id="positive-count">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Negative</h3>
+        <div class="value" style="color: var(--negative)" id="negative-count">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Neutral</h3>
+        <div class="value" style="color: var(--neutral)" id="neutral-count">0</div>
+      </div>
+    </div>
+
+    <div style="text-align: right; max-width: 1000px; margin: 0 auto 1rem;">
+      <button id="clearCardsBtn" class="btn-stop"
+        style="display: inline-block; background: var(--card-bg) !important; color: var(--text-secondary) !important; border: 1px solid var(--card-border);">
+        <i class="fas fa-trash-alt"></i> Clear Feed
       </button>
     </div>
-    <div class="tweets-container">
+
+    <div class="streaming-container">
+      <div id="tweets-container">
+        <div id="placeholder-waiting" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+          <i class="fas fa-satellite-dish" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+          <p>Waiting for tweets...</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='main.js') }}"></script>
   <script>
-    var source = new EventSource("/stream_inserts");
-    source.onmessage = function (event) {
-      var tweet = JSON.parse(event.data);
-      var wrapper = document.createElement('div');
-      wrapper.classList.add('tweet-card');
-      wrapper.innerHTML = `
-      <img src="https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg" alt="X Logo" class="logo-x" style="padding: 15px;">
-      <article>
-        <p>
-          <strong style="color: var(--text-secondary);">Post Content:</strong> ${tweet.content}
-        </p>
-        <p>
-          <span>Prediction: ${tweet.sentiment_label || tweet.prediction}</span><br>
-          <span>Confidence: ${typeof tweet.confidence === 'number' ? tweet.confidence.toFixed(2) : tweet.confidence}</span><br>
-          <span style="font-size: 0.9em; color: var(--text-secondary);">Latency: ${tweet.latency ? tweet.latency.toFixed(2) + 's' : 'N/A'}</span>
-        </p>
-      </article>
-    `;
-      console.log("Received tweet:", tweet); // Debug log
-
-      var tweetsContainer = document.querySelector('.tweets-container');
-      tweetsContainer.insertBefore(wrapper, tweetsContainer.firstChild);
-    };
+    let totalCount = 0;
+    let positiveCount = 0;
+    let negativeCount = 0;
+    let neutralCount = 0;
 
     document.getElementById("clearCardsBtn").addEventListener("click", function () {
-      document.querySelector('.tweets-container').innerHTML = '';
+      // Reset Data
+      totalCount = 0;
+      positiveCount = 0;
+      negativeCount = 0;
+      neutralCount = 0;
+
+      // Update UI Counters
+      document.getElementById('total-count').textContent = 0;
+      document.getElementById('positive-count').textContent = 0;
+      document.getElementById('negative-count').textContent = 0;
+      document.getElementById('neutral-count').textContent = 0;
+
+      // Clear Container and Restore Placeholder
+      const container = document.getElementById('tweets-container');
+      container.innerHTML = `
+      <div id="placeholder-waiting" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+        <i class="fas fa-satellite-dish" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+        <p>Waiting for tweets...</p>
+      </div>
+    `;
     });
+
+    const eventSource = new EventSource('/stream_inserts');
+
+    eventSource.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+      const sentiment = data.sentiment_label || 'Unknown';
+      const content = data.content || 'No content';
+      const confidence = (data.confidence || 0).toFixed(2);
+      const latency = (data.latency || 0).toFixed(3);
+
+      // Update counters
+      totalCount++;
+      if (sentiment === 'Positive') positiveCount++;
+      if (sentiment === 'Negative') negativeCount++;
+      if (sentiment === 'Neutral') neutralCount++;
+
+      document.getElementById('total-count').textContent = totalCount;
+      document.getElementById('positive-count').textContent = positiveCount;
+      document.getElementById('negative-count').textContent = negativeCount;
+      document.getElementById('neutral-count').textContent = neutralCount;
+
+      const container = document.getElementById('tweets-container');
+      if (container.querySelector('i.fa-satellite-dish')) {
+        container.innerHTML = '';
+      }
+
+      const sentimentClass = sentiment.toLowerCase();
+      const tweetCard = document.createElement('div');
+      tweetCard.className = 'tweet-card slide-in';
+      tweetCard.innerHTML = `
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg" alt="X Logo" style="float: left; width: 32px; height: 32px; margin-right: 15px;">
+        <h2>
+            <span class="sentiment-badge sentiment-${sentimentClass}">${sentiment}</span>
+        </h2>
+        <p>${content}</p>
+        <div class="tweet-meta">
+            <span class="badge badge-success">
+                <i class="fas fa-chart-line"></i> Confidence: ${confidence}
+            </span>
+            <span class="badge">
+                <i class="fas fa-clock"></i> Latency: ${latency}s
+            </span>
+        </div>
+    `;
+
+      container.insertBefore(tweetCard, container.firstChild);
+
+      // Keep only last 20 tweets
+      while (container.children.length > 20) {
+        container.removeChild(container.lastChild);
+      }
+    };
+
+    eventSource.onerror = function () {
+      console.error('EventSource failed');
+    };
   </script>
+
 </body>
 
 </html>

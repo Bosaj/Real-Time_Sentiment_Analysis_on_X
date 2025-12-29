@@ -1,165 +1,169 @@
 import os
 import sys
+import time
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import from_json, col, udf, current_timestamp
+from pyspark.sql.types import StringType, DoubleType, StructType, StructField
+from pyspark.ml.classification import LogisticRegressionModel
+from pyspark.ml.feature import IDFModel, Tokenizer, StopWordsRemover, HashingTF
+from pymongo import MongoClient
+import certifi
+from dotenv import load_dotenv
+
+# --- Environment Setup (Crucial for Windows) ---
 os.environ['HADOOP_HOME'] = r"C:\Users\ROG FLOW\hadoop"
 os.environ['hadoop.home.dir'] = r"C:\Users\ROG FLOW\hadoop"
 os.environ["PATH"] += os.pathsep + os.path.join(os.environ['HADOOP_HOME'], 'bin')
 os.environ['PYSPARK_PYTHON'] = r'C:\Users\ROGFLO~1\AppData\Local\Programs\Python\PYTHON~3\python.exe'
 os.environ['PYSPARK_DRIVER_PYTHON'] = r'C:\Users\ROGFLO~1\AppData\Local\Programs\Python\PYTHON~3\python.exe'
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, udf
-from pyspark.sql.types import StringType, FloatType, StructType, StructField, IntegerType
-from pyspark.sql.functions import from_json, col, udf
-from pyspark.sql.types import StringType, FloatType, StructType, StructField, IntegerType
-from pyspark.ml.classification import LogisticRegressionModel
-from pyspark.ml.feature import IDFModel, Tokenizer, StopWordsRemover, HashingTF, StringIndexer
-from pymongo import MongoClient
-import hashlib
-from pymongo.errors import PyMongoError, DuplicateKeyError
-from dotenv import load_dotenv
-import certifi
-
 load_dotenv()
 
+# --- Optimized SparkSession ---
 spark = SparkSession.builder \
-    .appName("RealTimeTweetProcessing") \
+    .appName("SentimentAnalysis") \
     .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0") \
     .config("spark.driver.bindAddress", "127.0.0.1") \
     .config("spark.driver.host", "127.0.0.1") \
     .master("local[*]") \
+    .config("spark.sql.shuffle.partitions", "4") \
+    .config("spark.streaming.kafka.maxRatePerPartition", "50") \
+    .config("spark.streaming.backpressure.enabled", "true") \
+    .config("spark.sql.streaming.statefulOperator.checkCorrectness.enabled", "false") \
     .config("spark.executor.memory", "4g") \
     .config("spark.driver.memory", "4g") \
-    .config("spark.sql.shuffle.partitions", "20") \
-    .config("spark.default.parallelism", "20") \
-    .config("spark.python.worker.timeout", "600") \
-    .config("spark.network.timeout", "600s") \
-    .config("spark.driver.maxResultSize", "4g") \
     .getOrCreate()
 
-# --- Load Models ---
+spark.sparkContext.setLogLevel("ERROR")
+
 print("Loading models...")
 try:
     idfModel = IDFModel.load("IDF_V1")
-    model = LogisticRegressionModel.load("V1")
+    lrModel = LogisticRegressionModel.load("V1")
     print("Models loaded successfully.")
 except Exception as e:
     print(f"Error loading models: {e}")
-    # Fallback or exit? For now, we assume models exist
-    raise e
+    sys.exit(1)
 
-# --- Streaming Phase ---
-schema = StructType([StructField("STRING", StringType(), True)])
-
-client = MongoClient(os.getenv("MONGO_URI"), tlsCAFile=certifi.where())
-db = client["BigData"]
-collection = db["TweetsPredictions"]
-
-def max_probability(prob):
-    return float(max(prob))
-
-get_max_prob = udf(max_probability, FloatType())
-
-tweets_df = spark.readStream \
+# --- Read from Kafka ---
+df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "localhost:9092") \
     .option("subscribe", "tweets") \
-    .option("startingOffsets", "earliest") \
-    .load() \
-    .selectExpr("CAST(value AS STRING)")
+    .option("startingOffsets", "latest") \
+    .option("failOnDataLoss", "false") \
+    .option("maxOffsetsPerTrigger", "50") \
+    .load()
 
-from pyspark.sql.types import DoubleType
+# --- Parse JSON ---
 json_schema = StructType([
     StructField("content", StringType(), True),
     StructField("created_at", DoubleType(), True)
 ])
 
-tweets_df = tweets_df.withColumn("data", from_json(col("value"), json_schema)).select("data.*")
-tweets_df = tweets_df.filter(col("content").isNotNull())
+df = df.selectExpr("CAST(value AS STRING) as json_value")
+df = df.select(from_json(col("json_value"), json_schema).alias("data")).select("data.*")
+df = df.filter(col("content").isNotNull())
 
-tweets_df.writeStream \
-    .format("console") \
-    .option("truncate", False) \
-    .start()
-
-# tweets_df = tweets_df.select(col("value").alias("content")) - Handled by JSON parsing
-
+# --- Apply ML Pipeline ---
 tokenizer = Tokenizer(inputCol="content", outputCol="words")
 remover = StopWordsRemover(inputCol="words", outputCol="filtered")
 hashingTF = HashingTF(inputCol="filtered", outputCol="rawFeatures", numFeatures=8192)
 
-featurized_data = hashingTF.transform(remover.transform(tokenizer.transform(tweets_df)))
+df = tokenizer.transform(df)
+df = remover.transform(df)
+df = hashingTF.transform(df)
+df = idfModel.transform(df)
+df = lrModel.transform(df)
 
-rescaled_data = idfModel.transform(featurized_data)
+# Add processing timestamp
+df = df.withColumn("processed_at", current_timestamp())
 
-predictions = model.transform(rescaled_data)
-predictions = predictions.withColumn("confidence", get_max_prob(predictions["probability"]))
+# Extract confidence
+def get_confidence(probability):
+    if probability:
+        return float(max(probability))
+    return 0.0
 
-# predictions.writeStream \
-#     .format("console") \
-#     .option("truncate", False) \
-#     .start()
+confidence_udf = udf(get_confidence, DoubleType())
+df = df.withColumn("confidence", confidence_udf(col("probability")))
 
-# UDF to generate deterministic ID
-import time
+# --- MongoDB Connection Pool ---
+uri = os.getenv("MONGO_URI")
+_mongo_client = None
 
-# UDF to generate deterministic ID (with timestamp to allow re-sending same content)
-def generate_id(content):
-    if content is None:
-        return None
-    # Add timestamp to make ID unique per submission instance
-    unique_str = content + str(time.time())
-    return hashlib.md5(unique_str.encode('utf-8')).hexdigest()
-
-generate_id_udf = udf(generate_id, StringType())
-
-# Add _id for deduplication
-predictions = predictions.withColumn("_id", generate_id_udf(col("content")))
-
-predictions_to_save = predictions.select("content", "prediction", "confidence", "_id", "created_at")
+def get_mongo_client():
+    global _mongo_client
+    if _mongo_client is None:
+        _mongo_client = MongoClient(
+            uri,
+            tlsCAFile=certifi.where(),
+            maxPoolSize=50,
+            minPoolSize=10,
+            maxIdleTimeMS=45000,
+            serverSelectionTimeoutMS=3000,
+            connectTimeoutMS=5000,
+            socketTimeoutMS=5000
+        )
+    return _mongo_client
 
 def save_to_mongo(batch_df, batch_id):
-    print(f"DEBUG: Processing batch {batch_id}")
+    start_time = time.time()
+    
     try:
-        # Convert to Pandas for batch insert
-        pandas_df = batch_df.toPandas()
+        if batch_df.isEmpty():
+            return
         
-        if len(pandas_df) > 0:
-            print(f"DEBUG: Inserting {len(pandas_df)} records to MongoDB...")
-            # Re-instantiate client to be safe with timeouts
-            local_client = MongoClient(os.getenv("MONGO_URI"), 
-                                     tlsCAFile=certifi.where(),
-                                     serverSelectionTimeoutMS=5000,
-                                     connectTimeoutMS=10000)
-            local_db = local_client["BigData"]
-            local_collection = local_db["TweetsPredictions"]
+        # Select required columns and collect
+        rows = batch_df.select("content", "prediction", "confidence", "created_at").collect()
+        
+        if not rows:
+            return
+        
+        # Map predictions
+        sentiment_map = {0: 'Negative', 1: 'Positive', 2: 'Neutral', 3: 'Irrelevant'}
+        
+        records = []
+        for row in rows:
+            # Calculate latency if created_at exists
+            latency = 0.0
+            if row.created_at:
+                latency = time.time() - float(row.created_at)
             
-            records = pandas_df.to_dict("records")
-            try:
-                # ordered=False continues to insert other docs if one fails (e.g. duplicate)
-                local_collection.insert_many(records, ordered=False)
-            except DuplicateKeyError:
-                pass # Expected for duplicates
-            except PyMongoError as e:
-                # Check for bulk write error which might contain duplicates
-                if "E11000" in str(e):
-                    pass
-                else:
-                    print(f"MongoDB Bulk Write Error in {batch_id}: {e}")
-            
-            print("DEBUG: Insertion complete.")
-            local_client.close()
-        else:
-            print("DEBUG: Batch is empty.")
-            
-    except PyMongoError as e:
-        print(f"MongoDB Error in batch {batch_id}: {str(e)}")
+            records.append({
+                "content": row.content,
+                "prediction": int(row.prediction),
+                "sentiment_label": sentiment_map.get(int(row.prediction), 'Unknown'),
+                "confidence": float(row.confidence),
+                "created_at": row.created_at,
+                "latency": latency
+            })
+        
+        # Use persistent connection pool
+        client = get_mongo_client()
+        db = client["BigData"]
+        collection = db["TweetsPredictions"]
+        
+        # Bulk insert (unordered for speed)
+        collection.insert_many(records, ordered=False)
+        
+        elapsed = time.time() - start_time
+        print(f"✅ Batch {batch_id}: {len(records)} records | MongoDB time: {elapsed:.3f}s")
+        
+        # Print sample for debug
+        # if len(records) > 0:
+        #    print(f"   Sample: {records[0]['sentiment_label']} (Latency: {records[0]['latency']:.2f}s)")
+        
     except Exception as e:
-        print(f"ERROR in save_to_mongo batch {batch_id}: {str(e)}")
+        print(f"❌ Batch {batch_id} error: {str(e)}")
 
-query = predictions_to_save.writeStream \
+# --- Start Streaming ---
+query = df.writeStream \
+    .trigger(processingTime='5 seconds') \
     .foreachBatch(save_to_mongo) \
-    .trigger(processingTime='2 seconds') \
     .outputMode("append") \
+    .option("checkpointLocation", "./checkpoint") \
     .start()
 
+print("🚀 Streaming started. Waiting for data...")
 query.awaitTermination()

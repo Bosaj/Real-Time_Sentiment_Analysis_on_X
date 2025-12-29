@@ -1,81 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-        }
-
-        .styled-table {
-            border-collapse: collapse;
-            margin: 25px 0;
-            font-size: 0.9em;
-            font-family: 'Inter', sans-serif;
-            min-width: 100%;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-        }
-
-        .styled-table thead tr {
-            background-color: var(--border-color);
-            color: var(--text-primary);
-            text-align: left;
-        }
-
-        .styled-table th,
-        .styled-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .styled-table tbody tr {
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .styled-table tbody tr:nth-of-type(even) {
-            background-color: var(--card-bg);
-        }
-
-        .styled-table tbody tr:nth-of-type(odd) {
-            background-color: var(--bg-color);
-        }
-
-        .styled-table tbody tr:last-of-type {
-            border-bottom: 2px solid var(--accent-color);
-        }
-
-        .styled-table tbody tr.active-row {
-            font-weight: bold;
-            color: var(--accent-color);
-        }
-    </style>
+    <title>Validation Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
 <body>
-    {% include "header.html" %}
-    <table class="styled-table">
-        <thead>
-            <tr>
-                <th>Content</th>
-                <th>Prediction</th>
-                <th>Confidence</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for prediction in predictions %}
-            <tr>
-                <td>{{ prediction.content }}</td>
-                <td>{{ prediction.sentiment_label }}</td>
-                <td>{{ prediction.confidence | round(2) }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    {% include 'header.html' %}
+
+    <div class="container">
+        <div class="hero fade-in-up">
+            <h1>Validation Results</h1>
+            <p>Historical sentiment analysis predictions</p>
+        </div>
+
+        <div class="validation-container fade-in-up" style="animation-delay: 0.2s">
+            <h2><i class="fas fa-database"></i> Recent Predictions</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-hashtag"></i> ID</th>
+                        <th><i class="fas fa-comment"></i> Content</th>
+                        <th><i class="fas fa-heart"></i> Sentiment</th>
+                        <th><i class="fas fa-percentage"></i> Confidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pred in predictions %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td style="max-width: 400px;">{{ pred.content }}</td>
+                        <td>
+                            <span class="sentiment-badge sentiment-{{ pred.sentiment_label.lower() }}">
+                                {{ pred.sentiment_label }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-success">
+                                {{ "%.2f"|format(pred.confidence or 0) }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </body>
 
 </html>

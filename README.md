@@ -12,7 +12,7 @@ This project develops a web application for real-time sentiment analysis of Twit
 ## Multimedia Content
 - **Video Demonstration**
 
-  [Link to Video Demonstration](https://github.com/OmarNouih/Twitter-Streams/assets/27814897/04f5149b-f44d-4218-b10e-1583bfb92ee7)
+  [Link to Video Demonstration](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/assets/Recording 2025-12-29 231309.mp4)
 
 ## Architecture
 - **APP**: Flask application, static resources, and HTML templates.
