@@ -43,7 +43,8 @@
         </p>
         <p>
           <span>Prediction: ${tweet.sentiment_label || tweet.prediction}</span><br>
-          <span>Confidence: ${typeof tweet.confidence === 'number' ? tweet.confidence.toFixed(2) : tweet.confidence}</span>
+          <span>Confidence: ${typeof tweet.confidence === 'number' ? tweet.confidence.toFixed(2) : tweet.confidence}</span><br>
+          <span style="font-size: 0.9em; color: var(--text-secondary);">Latency: ${tweet.latency ? tweet.latency.toFixed(2) + 's' : 'N/A'}</span>
         </p>
       </article>
     `;

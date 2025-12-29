@@ -63,12 +63,21 @@ def stream_inserts():
                 raw_data = change.replace("data: ", "").strip()
                 if raw_data:
                     data = json.loads(raw_data)
-                    mapped = map_prediction_to_sentiment(data.get("prediction"))
+                    import time
+                    if 'created_at' in data:
+                        data['latency'] = time.time() - data['created_at']
+                    
+                    prediction = data.get('prediction', 'Unknown')
+                    mapped = map_prediction_to_sentiment(prediction)
                     data["sentiment_label"] = mapped
                     yield 'data: {}\n\n'.format(json.dumps(data))
             except Exception as e:
-                print(f"Error parsing stream data: {e}")
-    return Response(generate(), mimetype='text/event-stream')
+                print(f"Error in stream_inserts: {e}")
+                
+    response = Response(generate(), mimetype='text/event-stream')
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['X-Accel-Buffering'] = 'no'
+    return response
 
 @app.route("/", methods = ['GET'])
 def index():
@@ -103,8 +112,13 @@ def clear_tweets():
     if not producer:
         producer = get_kafka_producer()
         
+    import time
     if producer:
-        producer.send('tweets', value = tweet_content)
+        message = {
+            "content": tweet_content,
+            "created_at": time.time()
+        }
+        producer.send('tweets', value=message)
     else:
         print("Kafka Producer not available, skipping message send.")
     return jsonify({"tweetContent": tweet_content})

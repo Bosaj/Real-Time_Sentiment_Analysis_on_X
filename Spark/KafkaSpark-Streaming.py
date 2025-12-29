@@ -67,12 +67,20 @@ tweets_df = spark.readStream \
     .load() \
     .selectExpr("CAST(value AS STRING)")
 
+from pyspark.sql.types import DoubleType
+json_schema = StructType([
+    StructField("content", StringType(), True),
+    StructField("created_at", DoubleType(), True)
+])
+
+tweets_df = tweets_df.withColumn("data", from_json(col("value"), json_schema)).select("data.*")
+
 tweets_df.writeStream \
     .format("console") \
     .option("truncate", False) \
     .start()
 
-tweets_df = tweets_df.select(col("value").alias("content"))
+# tweets_df = tweets_df.select(col("value").alias("content")) - Handled by JSON parsing
 
 tokenizer = Tokenizer(inputCol="content", outputCol="words")
 remover = StopWordsRemover(inputCol="words", outputCol="filtered")
@@ -91,17 +99,22 @@ predictions = predictions.withColumn("confidence", get_max_prob(predictions["pro
 #     .start()
 
 # UDF to generate deterministic ID
+import time
+
+# UDF to generate deterministic ID (with timestamp to allow re-sending same content)
 def generate_id(content):
     if content is None:
         return None
-    return hashlib.md5(content.encode('utf-8')).hexdigest()
+    # Add timestamp to make ID unique per submission instance
+    unique_str = content + str(time.time())
+    return hashlib.md5(unique_str.encode('utf-8')).hexdigest()
 
 generate_id_udf = udf(generate_id, StringType())
 
 # Add _id for deduplication
 predictions = predictions.withColumn("_id", generate_id_udf(col("content")))
 
-predictions_to_save = predictions.select("content", "prediction", "confidence", "_id")
+predictions_to_save = predictions.select("content", "prediction", "confidence", "_id", "created_at")
 
 def save_to_mongo(batch_df, batch_id):
     print(f"DEBUG: Processing batch {batch_id}")
@@ -144,6 +157,7 @@ def save_to_mongo(batch_df, batch_id):
 
 query = predictions_to_save.writeStream \
     .foreachBatch(save_to_mongo) \
+    .trigger(processingTime='2 seconds') \
     .outputMode("append") \
     .start()
 
