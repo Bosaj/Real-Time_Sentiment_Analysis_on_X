@@ -168,7 +168,7 @@ mongod --dbpath /path/to/data
 **Option B: MongoDB Atlas**
 Update `.env` with your Atlas connection string:
 ```env
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/
+MONGO_URI=
 ```
 
 ### 6️⃣ Train the Machine Learning Models
