@@ -1,3 +1,45 @@
+# Spark Checkpoint Files (DO NOT COMMIT)
+Spark/checkpoint/
+**/checkpoint/
+*.crc
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Environment Variables
+.env
+.env.local
+
+# MongoDB
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kafka
+*.lock
+
+# Temp Files
+*.tmp
+temp/
+tmp/
+
 *crc
 \IDF_V1
 \metadata
@@ -5,3 +47,6 @@
 \venv
 \data
 .env
+\commits
+\offsets
+\sources
