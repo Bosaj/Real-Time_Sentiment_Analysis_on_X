@@ -548,7 +548,6 @@ SSE Stream → Frontend Update
 ```
 
 **Liens de démonstration :**
-- **Vidéo démo :** [Lien GitHub](https://github.com/OmarNouih/X-Streams/assets/27814897/04f5149b-f44d-4218-b10e-1583bfb92ee7)
 - **Repository :** [GitHub](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X)
 
 ---
