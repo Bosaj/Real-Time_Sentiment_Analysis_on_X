@@ -18,7 +18,8 @@
 			<p>Analyze tweet sentiment instantly using advanced machine learning powered by Spark & Kafka</p>
 		</div>
 
-		<div class="wrapper fade-in-up" style="animation-delay: 0.2s">
+		<div class="wrapper fade-in-up" style="animation-delay: 0.2s"
+			data-model-type="{{ config.get('model_type', 'spark') }}">
 			<div class="input-box">
 				<div class="tweet-area">
 					<div class="input">

@@ -23,6 +23,8 @@ services:
       - zookeeper
     networks:
       - kafka-net
+    env_file:
+      - .env
 
   mongo:
     image: mongo:latest
@@ -32,6 +34,8 @@ services:
     command: [ "--replSet", "rs0", "--bind_ip_all" ]
     networks:
       - kafka-net
+    env_file:
+      - .env
 
 networks:
   kafka-net:

@@ -19,7 +19,7 @@ os.environ["PATH"] += os.pathsep + os.path.join(os.environ['HADOOP_HOME'], 'bin'
 os.environ['PYSPARK_PYTHON'] = r'C:\Users\ROGFLO~1\AppData\Local\Programs\Python\PYTHON~3\python.exe'
 os.environ['PYSPARK_DRIVER_PYTHON'] = r'C:\Users\ROGFLO~1\AppData\Local\Programs\Python\PYTHON~3\python.exe'
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'), override=True)
 
 # Ultra-optimized SparkSession
 spark = SparkSession.builder \
@@ -63,6 +63,7 @@ df = spark.readStream \
 # Parse JSON
 schema = StructType([
     StructField("content", StringType(), True),
+    StructField("tracking_id", StringType(), True),
     StructField("created_at", DoubleType(), True)
 ])
 
@@ -89,24 +90,30 @@ def get_confidence(probability):
 
 confidence_udf = udf(get_confidence, DoubleType())
 df = df.withColumn("confidence", confidence_udf(col("probability")))
-df = df.select("content", "prediction", "confidence", "created_at")
+df = df.select("content", "prediction", "confidence", "created_at", "tracking_id")
 
-# MongoDB connection - SWITCHED TO LOCAL FOR PERFORMANCE & RELIABILITY
-uri = "mongodb://localhost:27017/?directConnection=true"
-print(f"📡 MongoDB URI: {uri} (Local)\n")
+# MongoDB connection
+uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/?directConnection=true")
+print(f"📡 MongoDB URI: {uri} (from ENV)\n")
 
-# Local Connection (No SSL needed)
-mongo_client = MongoClient(
-    uri,
-    maxPoolSize=100,
-    minPoolSize=20,
-    maxIdleTimeMS=60000,
-    serverSelectionTimeoutMS=2000,
-    connectTimeoutMS=2000,
-    socketTimeoutMS=2000,
-    retryWrites=True,
-    w=0 
-)
+mongo_params = {
+    "host": uri,
+    "maxPoolSize": 100,
+    "minPoolSize": 20,
+    "maxIdleTimeMS": 60000,
+    "serverSelectionTimeoutMS": 2000,
+    "connectTimeoutMS": 2000,
+    "socketTimeoutMS": 2000,
+    "retryWrites": True,
+    "w": 0 
+}
+
+# Add SSL for Cloud
+if "mongodb+srv" in uri:
+    mongo_params["tlsCAFile"] = certifi.where()
+    mongo_params["tlsAllowInvalidCertificates"] = True
+
+mongo_client = MongoClient(**mongo_params)
 
 db = mongo_client["BigData"]
 collection = db["TweetsPredictions"]
@@ -154,7 +161,8 @@ def save_to_mongo(batch_df, batch_id):
                 "sentiment_label": sentiment_map.get(int(row.prediction), 'Unknown'),
                 "confidence": round(float(row.confidence), 2),
                 "created_at": row.created_at,
-                "latency": round(latency, 3)
+                "latency": round(latency, 3),
+                "tracking_id": row.tracking_id if hasattr(row, 'tracking_id') else None
             })
         
         # MongoDB insert

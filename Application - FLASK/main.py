@@ -10,7 +10,8 @@ from bson.json_util import dumps
 from dotenv import load_dotenv
 import certifi
 
-load_dotenv()
+# Load environment variables from the root .env file, overriding any stale system envs
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'), override=True)
 os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 app = Flask(__name__)
@@ -52,11 +53,11 @@ def map_prediction_to_sentiment(prediction):
 
 
 # --- Configuration Management ---
-# Default to Local
+# Initialize from Env (persisted state) or Default to Local
 APP_CONFIG = {
-    "db_type": "local",
-    "cloud_uri": "",
-    "groq_key": ""
+    "db_type": "cloud" if "mongodb+srv" in os.getenv("MONGO_URI", "") else "local",
+    "cloud_uri": os.getenv("MONGO_URI", "") if "mongodb+srv" in os.getenv("MONGO_URI", "") else "",
+    "groq_key": os.getenv("GROQ_API_KEY", "")
 }
 
 def get_mongo_client(collection_name="TweetsPredictions", use_llm=False):
@@ -72,7 +73,7 @@ def get_mongo_client(collection_name="TweetsPredictions", use_llm=False):
 
 @app.route("/", methods=['GET'])
 def index():
-    return render_template('index.html')
+    return render_template('index.html', config=APP_CONFIG)
 
 @app.route("/settings", methods=['GET'])
 def settings():
@@ -118,6 +119,7 @@ def generic_stream_inserts(use_llm=False):
             
             for change in change_stream:
                 data = change['fullDocument']
+                # tracking_id is already in fullDocument if inserted by Spark
                 if '_id' in data:
                     data['_id'] = str(data['_id'])
                 if 'latency' not in data and 'created_at' in data:
@@ -165,6 +167,80 @@ def stream_inserts_llm():
     return generic_stream_inserts(use_llm=True)
 
 
+
+# --- Configuration Routes ---
+@app.route("/advanced-settings")
+def advanced_settings():
+    return render_template("advanced_settings.html", config=APP_CONFIG)
+
+@app.route("/mongodb-config", methods=['GET', 'POST'])
+def mongodb_config():
+    if request.method == 'POST':
+        db_type = request.form.get("db_type")
+        cloud_uri = request.form.get("cloud_uri", "")
+        APP_CONFIG["db_type"] = db_type
+        APP_CONFIG["cloud_uri"] = cloud_uri
+        save_to_env()
+        return redirect('/advanced-settings')
+        
+    return render_template("mongodb_config.html", 
+                         db_type=APP_CONFIG.get("db_type", "local"),
+                         cloud_uri=APP_CONFIG.get("cloud_uri", ""))
+
+@app.route("/ai-config", methods=['GET', 'POST'])
+def ai_config():
+    if request.method == 'POST':
+        model_type = request.form.get("model_type")
+        groq_key = request.form.get("groq_key", "")
+        APP_CONFIG["model_type"] = model_type
+        APP_CONFIG["groq_key"] = groq_key
+        save_to_env()
+        return redirect('/advanced-settings')
+        
+    return render_template("ai_config.html", 
+                         model_type=APP_CONFIG.get("model_type", "spark"),
+                         groq_key=APP_CONFIG.get("groq_key", ""))
+
+@app.route("/update_kafka_settings", methods=['POST'])
+def update_kafka_settings():
+    # Placeholder for future implementation
+    return redirect('/advanced-settings')
+
+def save_to_env():
+    """Helper to persist APP_CONFIG to .env"""
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Spark', '.env')
+    if not os.path.exists(env_path):
+        env_path = os.path.join(os.path.dirname(__file__), '.env')
+        
+    try:
+        lines = []
+        if os.path.exists(env_path):
+            with open(env_path, 'r') as f:
+                lines = f.readlines()
+        
+        new_lines = []
+        keys_updated = {'GROQ_API_KEY': False, 'MONGO_URI': False}
+        
+        for line in lines:
+            if line.startswith('GROQ_API_KEY=') and 'groq_key' in APP_CONFIG:
+                new_lines.append(f'GROQ_API_KEY="{APP_CONFIG["groq_key"]}"\n')
+                keys_updated['GROQ_API_KEY'] = True
+            elif line.startswith('MONGO_URI=') and 'db_type' in APP_CONFIG:
+                uri_val = APP_CONFIG["cloud_uri"] if APP_CONFIG["db_type"] == 'cloud' else "mongodb://localhost:27017/?directConnection=true"
+                new_lines.append(f'MONGO_URI="{uri_val}"\n')
+                keys_updated['MONGO_URI'] = True
+            else:
+                new_lines.append(line)
+        
+        if not keys_updated['GROQ_API_KEY'] and 'groq_key' in APP_CONFIG:
+            new_lines.append(f'\nGROQ_API_KEY="{APP_CONFIG["groq_key"]}"\n')
+            
+        with open(env_path, 'w') as f:
+            f.writelines(new_lines)
+            
+    except Exception as e:
+        print(f"⚠️ Failed to save .env: {e}")
+
 @app.route("/validation", methods=['GET'])
 def validation():
     client = get_mongo_client()
@@ -180,9 +256,14 @@ def validation():
     return render_template('validation.html', predictions=predictions)
 
 @app.route('/produce_tweets', methods=['POST'])
-def clear_tweets():
+def produce_tweets():
     data = request.json
-    tweet_content = data['tweetContent']
+    tweet_content = data.get('tweetContent')
+    tracking_id = data.get('tracking_id')
+    
+    if not tweet_content:
+        return jsonify({"error": "No content provided"}), 400
+
     pattern = re.compile(r'[^\w\s.,!?;:\-\'"&()]')
     tweet_content = pattern.sub('', tweet_content)
     
@@ -195,11 +276,19 @@ def clear_tweets():
             "content": tweet_content,
             "created_at": time.time()
         }
+        if tracking_id:
+            message["tracking_id"] = tracking_id
+            
         producer.send('tweets', value=message)
+        print(f"Produced: {tweet_content[:20]}... ID: {tracking_id}")
     else:
         print("Kafka Producer not available, skipping message send.")
     
-    return jsonify({"tweetContent": tweet_content})
+    return jsonify({
+        "status": "queued",
+        "tweetContent": tweet_content, 
+        "tracking_id": tracking_id
+    })
 
 @app.route('/stream_csv', methods=['GET'])
 def stream_csv():

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Analysis Configuration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    {% include 'header.html' %}
+
+    <div class="container">
+        <div class="hero fade-in-up">
+            <h1>Analysis Method</h1>
+            <p>Choose between Local Spark ML or Advanced AI Analysis</p>
+        </div>
+
+        <form method="POST" action="/ai-config" id="aiConfigForm">
+            <input type="hidden" name="model_type" id="model_type" value="{{ model_type }}">
+            <input type="hidden" name="groq_key" id="groq_key_hidden" value="{{ groq_key }}">
+
+            <div class="config-grid fade-in-up" style="animation-delay: 0.2s">
+                <!-- Local Spark ML Card -->
+                <div class="option-card {% if model_type == 'spark' %}active{% endif %}"
+                    onclick="selectOption('spark')">
+                    <div class="icon"><i class="fas fa-bolt"></i></div>
+                    <h3>Local Spark MLlib</h3>
+                    <p>Use locally trained Logistic Regression model for high-speed analysis.</p>
+
+                    <div class="status-badge status-connected" style="margin-top: 1rem;">
+                        <i class="fas fa-file-code"></i> Model: Spark/lrModel
+                    </div>
+
+                    <ul class="pros-list">
+                        <li><i class="fas fa-check-circle"></i> Extremely Fast</li>
+                        <li><i class="fas fa-check-circle"></i> Offline Capable</li>
+                        <li><i class="fas fa-check-circle"></i> Zero Cost</li>
+                    </ul>
+                </div>
+
+                <!-- AI API Card -->
+                <div class="option-card {% if model_type == 'groq' %}active{% endif %}" onclick="selectOption('groq')">
+                    <div class="icon"><i class="fas fa-brain"></i></div>
+                    <h3>AI API Analysis</h3>
+                    <p>Leverage Large Language Models (LLM) for nuanced sentiment detection.</p>
+
+                    <div class="input-group">
+                        <label for="provider_select">Provider</label>
+                        <select id="provider_select" onclick="event.stopPropagation()">
+                            <option value="groq" selected>Groq (Llama 3)</option>
+                            <option value="openai" disabled>OpenAI (Coming Soon)</option>
+                        </select>
+
+                        <label for="groq_key_input" style="margin-top: 1rem; display: block;">API Key</label>
+                        <input type="password" id="groq_key_input" placeholder="gsk_..." value="{{ groq_key }}"
+                            onclick="event.stopPropagation()">
+                    </div>
+
+                    <ul class="pros-list">
+                        <li><i class="fas fa-check-circle"></i> Higher Accuracy</li>
+                        <li><i class="fas fa-check-circle"></i> Understands Context/Sarcasm</li>
+                        <li><i class="fas fa-check-circle"></i> Multilingual Support</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="config-btn-group fade-in-up" style="animation-delay: 0.4s">
+                <button type="button" class="btn-start"
+                    style="background: var(--card-bg) !important; border: 1px solid var(--card-border) !important;"
+                    onclick="window.history.back()">Cancel</button>
+                <button type="submit" class="btn-start" onclick="prepareSubmit()">Save Configuration</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function selectOption(type) {
+            document.getElementById('model_type').value = type;
+            document.querySelectorAll('.option-card').forEach(card => card.classList.remove('active'));
+
+            if (type === 'spark') {
+                document.querySelectorAll('.option-card')[0].classList.add('active');
+            } else {
+                document.querySelectorAll('.option-card')[1].classList.add('active');
+            }
+        }
+
+        function prepareSubmit() {
+            const keyInput = document.getElementById('groq_key_input');
+            if (keyInput) {
+                document.getElementById('groq_key_hidden').value = keyInput.value;
+            }
+        }
+
+        // Prevent click propagation on inputs
+        document.getElementById('provider_select').addEventListener('click', (e) => e.stopPropagation());
+        document.getElementById('groq_key_input').addEventListener('click', (e) => e.stopPropagation());
+    </script>
+</body>
+
+</html>

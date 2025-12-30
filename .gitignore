@@ -1,45 +1,42 @@
-# Spark Checkpoint Files (DO NOT COMMIT)
-Spark/checkpoint/
-**/checkpoint/
-*.crc
-
-# Python
+# General
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-env/
-venv/
-*.egg-info/
-dist/
-build/
 
-# Environment Variables
+# Environment variables
 .env
 .env.local
+.env.*.local
+!.env.example
 
-# MongoDB
-*.log
-
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 
+# Project specific
+checkpoint/
+spark-warehouse/
+metastore_db/
+derby.log
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual Env
+venv/
+env/
+.venv/
+
 # OS
 .DS_Store
 Thumbs.db
 
-# Kafka
-*.lock
-
-# Temp Files
-*.tmp
-temp/
-tmp/
-
+# Spark
+spark-events/
+*.crc
 *crc
 \IDF_V1
 \metadata

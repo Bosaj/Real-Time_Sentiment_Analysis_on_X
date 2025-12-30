@@ -10,10 +10,10 @@ ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
 ENV PATH $PATH:$JAVA_HOME/bin
 
 # Install Spark
-RUN curl -O https://archive.apache.org/dist/spark/spark-3.1.2/spark-3.1.2-bin-hadoop3.2.tgz && \
-    tar xvf spark-3.1.2-bin-hadoop3.2.tgz && \
-    mv spark-3.1.2-bin-hadoop3.2 /spark && \
-    rm spark-3.1.2-bin-hadoop3.2.tgz
+RUN curl -O https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz && \
+    tar xvf spark-3.5.0-bin-hadoop3.tgz && \
+    mv spark-3.5.0-bin-hadoop3 /spark && \
+    rm spark-3.5.0-bin-hadoop3.tgz
 
 # Set SPARK_HOME
 ENV SPARK_HOME /spark

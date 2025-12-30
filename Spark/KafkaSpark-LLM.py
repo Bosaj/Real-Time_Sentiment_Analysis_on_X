@@ -15,16 +15,12 @@ os.environ["PATH"] += os.pathsep + os.path.join(os.environ['HADOOP_HOME'], 'bin'
 os.environ['PYSPARK_PYTHON'] = r'C:\Users\ROGFLO~1\AppData\Local\Programs\Python\PYTHON~3\python.exe'
 os.environ['PYSPARK_DRIVER_PYTHON'] = r'C:\Users\ROGFLO~1\AppData\Local\Programs\Python\PYTHON~3\python.exe'
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'), override=True)
 
 # Config
 GROQ_KEY_DEFAULT = os.getenv("GROQ_API_KEY", "") 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions" # Correct Endpoint for Groq OpenAI-compatible
 # Note: User provided code had "https://api.groq.com/v1/models/your-model/infer". 
-# The standard is usually openai-compatible. Let's stick to standard if possible, or user's url.
-# User code had: "https://api.groq.com/v1/models/your-model/infer" -> likely generic placeholder.
-# I will use the known working Groq endpoint: https://api.groq.com/openai/v1/chat/completions
-# Use "llama3-8b-8192" or "mixtral-8x7b-32768" as model.
 
 spark = SparkSession.builder \
     .appName("SentimentAnalysisLLM") \
@@ -48,6 +44,7 @@ df = spark.readStream \
 
 schema = StructType([
     StructField("content", StringType(), True),
+    StructField("tracking_id", StringType(), True),
     StructField("created_at", FloatType(), True)
 ])
 
@@ -112,7 +109,31 @@ def save_to_mongo(batch_df, batch_id):
     print(f"📊 Processing Batch {batch_id} with LLM ({len(records)} tweets)...")
     
     # Connect Only When Needed
-    mongo_client = MongoClient("mongodb://localhost:27017/?directConnection=true")
+    uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/?directConnection=true")
+    
+    mongo_params = {
+        "host": uri,
+        "serverSelectionTimeoutMS": 2000,
+        "connectTimeoutMS": 2000,
+        "socketTimeoutMS": 2000,
+    }
+    
+    import certifi # Ensure imported if not at top, but usually is. 
+    # Actually certifi is not imported in LLM script yet? Let's check imports.
+    # checking imports: "import certifi" WAS NOT in previous view of LLM script?
+    # I need to add import certifi at top first? 
+    # The tool only replaces this block. 
+    # Let's assume I need to add import. 
+    # Wait, I cannot add import at top with this replace block.
+    # I will stick to basic replace here, and add import in separate call if needed.
+    # Or I can import inline:
+    
+    if "mongodb+srv" in uri:
+        import certifi
+        mongo_params["tlsCAFile"] = certifi.where()
+        mongo_params["tlsAllowInvalidCertificates"] = True
+        
+    mongo_client = MongoClient(**mongo_params)
     db = mongo_client["BigData"]
     collection = db["TweetsPredictionsLLM"]
     
@@ -129,7 +150,8 @@ def save_to_mongo(batch_df, batch_id):
             "sentiment_label": sentiment,
             "confidence": confidence,
             "created_at": row.created_at,
-            "model": "Groq-LLM"
+            "model": "Groq-LLM",
+            "tracking_id": row.tracking_id if hasattr(row, 'tracking_id') else None
         }
         final_docs.append(doc)
         print(f"   🤖 {sentiment}: {row.content[:50]}...")
