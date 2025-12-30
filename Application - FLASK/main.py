@@ -30,7 +30,10 @@ producer = get_kafka_producer()
 uri = os.getenv("MONGO_URI")
 
 def watch_changes():
-    client = MongoClient(uri, tlsCAFile=certifi.where())
+    if "mongodb+srv" in uri:
+        client = MongoClient(uri, tlsCAFile=certifi.where())
+    else:
+        client = MongoClient(uri)
     db = client["BigData"]
     collection = db["TweetsPredictions"]
     change_stream = collection.watch([{'$match': {'operationType': 'insert'}}])
