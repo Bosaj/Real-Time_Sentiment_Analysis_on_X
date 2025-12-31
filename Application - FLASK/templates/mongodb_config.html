@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Configuration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    {% include 'header.html' %}
+
+    <div class="container">
+        <div class="hero fade-in-up">
+            <h1>Database Configuration</h1>
+            <p>Select your preferred MongoDB deployment mode</p>
+        </div>
+
+        <form method="POST" action="/mongodb-config" id="dbConfigForm">
+            <input type="hidden" name="db_type" id="db_type" value="{{ db_type }}">
+            <input type="hidden" name="cloud_uri" id="cloud_uri_hidden" value="{{ cloud_uri }}">
+
+            <div class="config-grid fade-in-up" style="animation-delay: 0.2s">
+                <!-- Local MongoDB Card -->
+                <div class="option-card {% if db_type == 'local' %}active{% endif %}" onclick="selectOption('local')">
+                    <div class="icon"><i class="fas fa-database"></i></div>
+                    <h3>Local MongoDB</h3>
+                    <p>Use local MongoDB instance for faster performance suitable for development.</p>
+
+                    <ul class="pros-list">
+                        <li><i class="fas fa-check-circle"></i> Low Latency</li>
+                        <li><i class="fas fa-check-circle"></i> No Internet Required</li>
+                        <li><i class="fas fa-check-circle"></i> Data Privacy</li>
+                    </ul>
+
+                    <div class="status-badge status-connected" style="margin-top: 2rem;">
+                        <i class="fas fa-plug"></i> Default: localhost:27017
+                    </div>
+                </div>
+
+                <!-- Cloud MongoDB Card -->
+                <div class="option-card {% if db_type == 'cloud' %}active{% endif %}" onclick="selectOption('cloud')">
+                    <div class="icon"><i class="fas fa-cloud"></i></div>
+                    <h3>MongoDB Atlas</h3>
+                    <p>Use cloud MongoDB for scalable, remote access and collaborative features.</p>
+
+                    <div class="input-group">
+                        <label for="atlas_uri_input">Connection String</label>
+                        <input type="password" id="atlas_uri_input" placeholder="mongodb+srv://..."
+                            value="{{ cloud_uri }}" onclick="event.stopPropagation()">
+                    </div>
+
+                    <ul class="pros-list">
+                        <li><i class="fas fa-check-circle"></i> Remote Access</li>
+                        <li><i class="fas fa-check-circle"></i> Scalable Infrastructure</li>
+                        <li><i class="fas fa-check-circle"></i> Auto-Backups</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="config-btn-group fade-in-up" style="animation-delay: 0.4s">
+                <button type="button" class="btn-start"
+                    style="background: var(--card-bg) !important; border: 1px solid var(--card-border) !important;"
+                    onclick="window.history.back()">Cancel</button>
+                <button type="submit" class="btn-start" onclick="prepareSubmit()">Save Configuration</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function selectOption(type) {
+            document.getElementById('db_type').value = type;
+            document.querySelectorAll('.option-card').forEach(card => card.classList.remove('active'));
+
+            // Find the index based on type to add active class
+            if (type === 'local') {
+                document.querySelectorAll('.option-card')[0].classList.add('active');
+            } else {
+                document.querySelectorAll('.option-card')[1].classList.add('active');
+            }
+        }
+
+        function prepareSubmit() {
+            // Update hidden cloud uri input from the visible one before submitting
+            const visibleInput = document.getElementById('atlas_uri_input');
+            if (visibleInput) {
+                document.getElementById('cloud_uri_hidden').value = visibleInput.value;
+            }
+        }
+
+        // Prevent click propagation on input
+        document.getElementById('atlas_uri_input').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    {% include 'header.html' %}
+
+    <div class="container">
+        <div class="hero fade-in-up">
+            <h1>Advanced Settings</h1>
+            <p>Fine-tune system parameters and configurations</p>
+        </div>
+
+        <div class="settings-dashboard fade-in-up" style="animation-delay: 0.2s; max-width: 900px; margin: 0 auto;">
+
+            <!-- Database Section -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <h3><i class="fas fa-database"></i> Database Configuration</h3>
+                    <a href="/mongodb-config" class="badge badge-success">Configure</a>
+                </div>
+                <div class="control-group">
+                    <label>Current Mode</label>
+                    <span
+                        class="status-badge {% if config.db_type == 'local' %}status-connected{% else %}badge-warning{% endif %}">
+                        {{ config.db_type|upper }}
+                    </span>
+                </div>
+                <div class="control-group">
+                    <label>Collection</label>
+                    <span style="color: var(--text-secondary); font-family: monospace;">{{ config.mongo_collection or
+                        'TweetsPredictions' }}</span>
+                </div>
+            </div>
+
+            <!-- AI Section -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <h3><i class="fas fa-brain"></i> Analysis Method</h3>
+                    <a href="/ai-config" class="badge badge-success">Configure</a>
+                </div>
+                <div class="control-group">
+                    <label>Active Model</label>
+                    <span
+                        class="status-badge {% if config.model_type == 'spark' %}status-connected{% else %}badge-warning{% endif %}">
+                        {{ 'Local Spark ML' if config.model_type == 'spark' else 'Groq AI API' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Kafka Section -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <h3><i class="fas fa-network-wired"></i> Kafka Settings</h3>
+                </div>
+                <form method="POST" action="/update_kafka_settings">
+                    <div class="control-group">
+                        <label>Bootstrap Servers</label>
+                        <input type="text" name="kafka_bootstrap" value="localhost:9092"
+                            style="background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); padding: 5px 10px; border-radius: 8px; color: var(--text-secondary);"
+                            disabled>
+                    </div>
+                    <div class="control-group">
+                        <label>Topic Name</label>
+                        <input type="text" name="kafka_topic" value="tweets"
+                            style="background: rgba(0,0,0,0.2); border: 1px solid var(--card-border); padding: 5px 10px; border-radius: 8px; color: var(--text-secondary);"
+                            disabled>
+                    </div>
+                </form>
+            </div>
+
+            <!-- System Info -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <h3><i class="fas fa-info-circle"></i> System Information</h3>
+                </div>
+                <div class="control-group">
+                    <label>Spark Version</label>
+                    <span style="color: var(--text-secondary);">3.5.0</span>
+                </div>
+                <div class="control-group">
+                    <label>Environment</label>
+                    <span style="color: var(--text-secondary);">Production (Local)</span>
+                </div>
+                <div class="config-btn-group" style="justify-content: flex-start; margin-top: 1rem;">
+                    <button class="badge badge-danger" style="border: none; cursor: pointer;">
+                        <i class="fas fa-trash"></i> Clear Cache
+                    </button>
+                    <button class="badge badge-warning" style="border: none; cursor: pointer;">
+                        <i class="fas fa-history"></i> Reset Defaults
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>
