@@ -200,7 +200,7 @@ def save_to_mongo(batch_df, batch_id):
     except Exception as e:
         print(f"\n❌ Batch {batch_id} ERROR: {str(e)}")
 
-# Start streaming
+# Start streaming kafka 
 query = df.writeStream \
     .trigger(processingTime='3 seconds') \
     .foreachBatch(save_to_mongo) \
