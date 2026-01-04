@@ -1,0 +1,157 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import from_json, col, udf
+from pyspark.sql.types import StringType, FloatType, StructType, StructField
+from pyspark.ml.classification import LogisticRegressionModel
+from pyspark.ml.feature import IDFModel, Tokenizer, StopWordsRemover, HashingTF
+from pymongo import MongoClient
+import os
+import requests
+import json
+import time
+
+# Default GROQ API key (injected directly as requested).
+# Warning: hardcoding secrets in source is not recommended for production.
+GROQ_KEY_DEFAULT = "YOUR KEY HERE"
+
+spark = SparkSession.builder \
+    .appName("RealTimeTweetProcessing") \
+    .master("local[*]") \
+    .getOrCreate()
+
+model = LogisticRegressionModel.load("V1")
+idfModel = IDFModel.load("IDF_V1")
+
+schema = StructType([StructField("STRING", StringType(), True)])
+
+client = MongoClient("mongodb://localhost:27017/BigData")
+db = client["BigData"]
+collection = db["TweetsPredictions"]
+
+def max_probability(prob):
+    return float(max(prob))
+
+get_max_prob = udf(max_probability, FloatType())
+
+tweets_df = spark.readStream \
+    .format("kafka") \
+    .option("kafka.bootstrap.servers", "localhost:9092") \
+    .option("subscribe", "tweets") \
+    .option("startingOffsets", "earliest") \
+    .load() \
+    .selectExpr("CAST(value AS STRING)")
+
+tweets_df.writeStream \
+    .format("console") \
+    .option("truncate", False) \
+    .start()
+
+tweets_df = tweets_df \
+    .select(col("value").alias("content"))
+
+tweets_df.writeStream \
+    .format("console") \
+    .option("truncate", False) \
+    .start()
+
+tokenizer = Tokenizer(inputCol="content", outputCol="words")
+remover = StopWordsRemover(inputCol="words", outputCol="filtered")
+hashingTF = HashingTF(inputCol="filtered", outputCol="rawFeatures")
+
+featurized_data = hashingTF.transform(remover.transform(tokenizer.transform(tweets_df)))
+
+featurized_data.writeStream \
+    .format("console") \
+    .option("truncate", False) \
+    .start()
+
+rescaled_data = idfModel.transform(featurized_data)
+
+rescaled_data.writeStream \
+    .format("console") \
+    .option("truncate", False) \
+    .start()
+
+predictions = model.transform(rescaled_data)
+predictions = predictions.withColumn("confidence", get_max_prob(predictions["probability"]))
+
+predictions.writeStream \
+    .format("console") \
+    .option("truncate", False) \
+    .start()
+
+predictions_to_save = predictions.select("content", "prediction", "confidence")
+
+def save_to_mongo(batch_df, batch_id):
+    print(f"Processing batch {batch_id}")
+    batch_df.show(truncate=False)  
+    records = batch_df.toPandas().to_dict("records")
+    if not records:
+        print("No records to insert for this batch")
+        return
+
+    # If GROQ_API_KEY is set in environment use it, otherwise fall back to the hardcoded key
+    GROQ_KEY = os.environ.get("GROQ_API_KEY", GROQ_KEY_DEFAULT)
+    GROQ_URL = os.environ.get("GROQ_API_URL", "https://api.groq.com/v1/models/your-model/infer")
+
+    def llm_classify(text):
+        if not GROQ_KEY:
+            return None, 0.0
+        headers = {
+            "Authorization": f"Bearer {GROQ_KEY}",
+            "Content-Type": "application/json",
+        }
+        # Build prompt safely: use a template with doubled braces so formatting doesn't
+        # interpret JSON braces as format placeholders.
+        prompt_template = (
+            'Classify the following tweet into one of: Negative, Positive, Neutral, Irrelevant. '
+            'Return a JSON object exactly like: {{"sentiment":"<label>","confidence":<0-1>}}.\n\n'
+            'Tweet: "{}"'
+        )
+        prompt = prompt_template.format(text)
+        payload = {"input": prompt}
+        try:
+            r = requests.post(GROQ_URL, headers=headers, json=payload, timeout=10)
+            r.raise_for_status()
+            resp = r.json()
+            # Attempt to extract model textual output
+            model_out = None
+            if isinstance(resp, dict):
+                model_out = resp.get("output") or resp.get("text") or json.dumps(resp)
+            else:
+                model_out = str(resp)
+            try:
+                parsed = json.loads(model_out)
+                return parsed.get("sentiment"), float(parsed.get("confidence", 0.0))
+            except Exception:
+                # simple heuristics fallback
+                mo = model_out.lower()
+                if "positive" in mo:
+                    return "Positive", 0.9
+                if "negative" in mo:
+                    return "Negative", 0.9
+                if "neutral" in mo:
+                    return "Neutral", 0.9
+                return "Irrelevant", 0.0
+        except Exception as e:
+            print("LLM request failed:", e)
+            return None, 0.0
+
+    if GROQ_KEY:
+        print(f"Using GROQ LLM for classification on {len(records)} records")
+        for rec in records:
+            content = rec.get("content") or rec.get("value") or ""
+            sentiment, confidence = llm_classify(content)
+            if sentiment is not None:
+                rec["prediction"] = sentiment
+                rec["confidence"] = confidence
+            time.sleep(0.01)
+
+    print(f"Inserting {len(records)} records to MongoDB")
+    collection.insert_many(records)
+
+query = predictions_to_save.writeStream \
+    .foreachBatch(save_to_mongo) \
+    .outputMode("append") \
+    .start()
+
+query.awaitTermination()
