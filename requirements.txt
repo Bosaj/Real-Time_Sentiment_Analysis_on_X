@@ -1,0 +1,8 @@
+pyspark>=3.5,<3.6
+kafka-python>=2.0,<2.1
+flask>=3.0,<3.2
+pymongo>=4.6,<4.10
+pandas>=2.0,<2.3
+python-dotenv>=1.0,<1.1
+certifi>=2023.11
+requests>=2.31,<3.0

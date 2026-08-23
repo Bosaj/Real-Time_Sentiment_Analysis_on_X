@@ -1,5 +1,8 @@
 # Real-Time Sentiment Analysis on Twitter/X Streams
 
+[![CI](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/actions/workflows/ci.yml/badge.svg)](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 ## 🛠️ Tech Stack
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
@@ -118,30 +121,27 @@ cd Real-Time_Sentiment_Analysis_on_X
 
 ### 2️⃣ Environment Setup
 
-Create a `.env` file in the project root:
+Copy `.env.example` to `.env` and fill in your own values:
+```bash
+cp .env.example .env
+```
 ```env
 MONGO_URI=mongodb://localhost:27017/
+GROQ_API_KEY=your_groq_api_key   # only needed for the optional LLM classification path
 PYTHONIOENCODING=utf-8
 HADOOP_HOME=C:\hadoop
 PYSPARK_PYTHON=C:\Users\YourUser\AppData\Local\Programs\Python\Python311\python.exe
 PYSPARK_DRIVER_PYTHON=C:\Users\YourUser\AppData\Local\Programs\Python\Python311\python.exe
 ```
 
+> **Never commit your real `.env` file.** It is git-ignored; only `.env.example` (with placeholder values) is tracked.
+
 ### 3️⃣ Install Python Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-**requirements.txt:**
-```txt
-pyspark==3.5.3
-kafka-python==2.0.2
-flask==3.0.0
-pymongo==4.6.0
-pandas==2.1.4
-python-dotenv==1.0.0
-certifi==2023.11.17
-```
+See [`requirements.txt`](requirements.txt) for the full pinned dependency list (PySpark, kafka-python, Flask, PyMongo, pandas, python-dotenv, certifi, requests).
 
 ### 4️⃣ Start Kafka with Docker
 
@@ -423,6 +423,19 @@ mongod --dbpath /path/to/data
 
 ***
 
+## ✅ Testing / CI
+
+A GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every push/PR to `main`. It does **not** spin up Kafka, Spark, or MongoDB - that requires live infrastructure this repo doesn't ship. Instead it checks that the code itself is sound:
+
+- Installs all dependencies from `requirements.txt` (verifies they are resolvable/installable)
+- Validates that every `.ipynb` notebook is structurally well-formed (via `nbformat`)
+- Byte-compiles every `.py` script to catch syntax errors
+- Runs `flake8` in two passes: a strict pass that fails the build on real errors (syntax errors, undefined names), and a lenient pass that reports style issues without failing the build
+
+## 📝 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -441,6 +454,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact
 
 For questions or support, please open an issue on [GitHub](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/issues).
+
+## 👤 Author
+
+**Oussama EL HADJI** — [github.com/Bosaj](https://github.com/Bosaj)
+(Team project — see contributors listed above.)
 
 ***
 

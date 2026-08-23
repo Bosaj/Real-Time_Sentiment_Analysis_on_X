@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate notebooks, syntax & dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install nbformat flake8
+
+      - name: Validate notebook structural integrity
+        run: |
+          find . -name "*.ipynb" -not -path "*/.ipynb_checkpoints/*" -print0 | \
+            xargs -0 -I{} python -c "
+          import sys, nbformat
+          path = sys.argv[1]
+          nb = nbformat.read(open(path, encoding='utf-8'), as_version=4)
+          nbformat.validate(nb)
+          print(f'OK: {path}')
+          " {}
+
+      - name: Check Python syntax (all scripts byte-compile)
+        run: |
+          find . -name "*.py" -not -path "*/__pycache__/*" -print0 | \
+            xargs -0 -n1 python -m py_compile
+          echo "Syntax OK"
+
+      - name: Lint - fail only on real errors (syntax / undefined names)
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics \
+            --exclude=.git,__pycache__,.github
+
+      - name: Lint - style report (non-blocking)
+        run: |
+          flake8 . --count --exit-zero --max-line-length=127 \
+            --exclude=.git,__pycache__,.github --statistics
+
+    # Note: this CI intentionally does NOT start Kafka, Spark, or MongoDB.
+    # It validates that the code is syntactically correct, free of
+    # undefined-name errors, and that all declared dependencies are
+    # installable - it does not execute the streaming pipeline itself,
+    # which requires live external services not available to this runner.
