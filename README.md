@@ -22,6 +22,20 @@
 
 ***
 
+## ⚡ Try it now — lightweight demo (no infrastructure required)
+
+The full pipeline below needs a live Kafka + Spark + MongoDB stack. For a version you can actually run and deploy with nothing but Python, `app.py` wraps a scikit-learn TF-IDF + Logistic Regression model — trained on the exact same `Spark/X_training.csv` data (74,682 labeled tweets) as the PySpark pipeline — behind a Streamlit UI. It reaches **95.2% validation accuracy** on `Spark/X_validation.csv`.
+
+```bash
+pip install -r requirements.txt   # lightweight deps only: streamlit, scikit-learn, pandas, joblib
+python train_model.py             # trains and saves model/sentiment_pipeline.joblib (~5.6MB)
+streamlit run app.py
+```
+
+Deployable in one click at [share.streamlit.io](https://share.streamlit.io) (point it at `app.py`) — no Docker, Kafka, or MongoDB needed. Note: the underlying model is trained on gaming/tech-brand Twitter commentary, so it's strong within that domain but can misclassify unrelated neutral text (e.g. plain scheduling statements) — a real limitation of the training data, not the demo itself.
+
+***
+
 ## 📋 Overview
 This project is a **real-time sentiment analysis web application** that processes Twitter/X streams using Apache Kafka, Apache Spark MLlib, and machine learning models. The system classifies each tweet into four sentiment categories:
 - ✅ **Positive**
@@ -76,6 +90,11 @@ This project is a **real-time sentiment analysis web application** that processe
 
 ```
 Real-Time_Sentiment_Analysis_on_X/
+├── app.py                         # Lightweight Streamlit demo (deployable, no infra needed)
+├── train_model.py                 # Trains the scikit-learn model behind app.py
+├── model/sentiment_pipeline.joblib # Saved model (95.2% validation accuracy)
+├── requirements.txt                # Lightweight deps for app.py / Streamlit Cloud
+├── requirements-pipeline.txt       # Full deps for the real-time pipeline below
 ├── Application - FLASK/
 │   ├── main.py                    # Flask application
 │   ├── templates/
@@ -137,11 +156,13 @@ PYSPARK_DRIVER_PYTHON=C:\Users\YourUser\AppData\Local\Programs\Python\Python311\
 > **Never commit your real `.env` file.** It is git-ignored; only `.env.example` (with placeholder values) is tracked.
 
 ### 3️⃣ Install Python Dependencies
+
+For the full real-time pipeline (Kafka/Spark/MongoDB/Flask) described in this section:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-pipeline.txt
 ```
 
-See [`requirements.txt`](requirements.txt) for the full pinned dependency list (PySpark, kafka-python, Flask, PyMongo, pandas, python-dotenv, certifi, requests).
+(`requirements.txt` at the repo root is intentionally the lightweight set for the Streamlit demo above — streamlit, scikit-learn, pandas, joblib — so it installs fast on Streamlit Community Cloud, which always reads the root file.)
 
 ### 4️⃣ Start Kafka with Docker
 

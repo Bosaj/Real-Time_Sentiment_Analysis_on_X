@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `app.py` + `train_model.py`: a lightweight, deployable Streamlit demo. Trains a scikit-learn TF-IDF + Logistic Regression pipeline on the same `Spark/X_training.csv` data as the PySpark pipeline (95.2% accuracy on `Spark/X_validation.csv`), so the sentiment classifier can be tried and deployed (e.g. Streamlit Community Cloud) without a live Kafka/Spark/MongoDB stack. The full real-time pipeline remains the intended production architecture when that infrastructure is available.
+- Split `requirements.txt` into a lightweight root file (for `app.py`/Streamlit Cloud) and `requirements-pipeline.txt` (the original full pipeline dependencies); CI now installs and validates both.
 - MIT `LICENSE` file (the README already referenced an MIT license; the file itself was missing).
 - `requirements.txt` pinning the project's runtime dependencies (PySpark, kafka-python, Flask, PyMongo, pandas, python-dotenv, certifi, requests).
 - GitHub Actions CI workflow validating notebook integrity, Python syntax, and dependency installability (does not spin up Kafka/Spark/MongoDB).
