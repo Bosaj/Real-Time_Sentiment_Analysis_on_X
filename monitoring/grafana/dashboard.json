@@ -1,0 +1,51 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Real-Time_Sentiment_Analysis_on_X - Request Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "rate(app_requests_total[5m])",
+          "legendFormat": "{{endpoint}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Real-Time_Sentiment_Analysis_on_X - Request Duration (p95)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(app_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95 duration"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Real-Time_Sentiment_Analysis_on_X - Health & Evaluation Index",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "model_evaluation_score{metric_name='quality_index'}",
+          "legendFormat": "Quality Index"
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "title": "Real-Time_Sentiment_Analysis_on_X Observability Dashboard",
+  "uid": "real_time_sentiment_analysis_on_x_obs",
+  "version": 1
+}
