@@ -10,4 +10,16 @@ function getHealthStatus() {
   };
 }
 
-module.exports = { getHealthStatus };
+function checkLiveness() {
+  return true;
+}
+
+function checkReadiness() {
+  return true;
+}
+
+module.exports = {
+  getHealthStatus,
+  checkLiveness,
+  checkReadiness
+};
