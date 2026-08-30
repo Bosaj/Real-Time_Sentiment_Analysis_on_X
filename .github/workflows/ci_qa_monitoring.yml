@@ -2,9 +2,12 @@ name: QA, Testing & Observability CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master, portfolio-docs-cleanup, docs-wiki-draft ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
+
+env:
+  PYTHONPATH: .
 
 jobs:
   qa_testing_monitoring:
@@ -14,28 +17,37 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
+        if: hashFiles('monitoring/logger.py') != '' || hashFiles('scripts/eval_harness.py') != ''
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install Dependencies
+      - name: Install Python Base Dependencies
+        if: hashFiles('monitoring/logger.py') != '' || hashFiles('scripts/eval_harness.py') != ''
         run: |
           python -m pip install --upgrade pip
           pip install pytest prometheus_client
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run Pytest & QA Check
-        run: pytest -v
+      - name: Run Pytest QA Suite
+        if: hashFiles('tests/test_monitoring_and_qa.py') != ''
+        run: |
+          python -m pytest tests/test_monitoring_and_qa.py -v
 
       - name: Run Evaluation Harness
-        run: python -m scripts.eval_harness
+        if: hashFiles('scripts/eval_harness.py') != ''
+        run: |
+          python scripts/eval_harness.py
+
       - name: Set up Node.js
+        if: hashFiles('scripts/eval_harness.js') != ''
         uses: actions/setup-node@v4
         with:
           node-version: "18"
 
       - name: Run Node Evaluation
-        run: node scripts/eval_harness.js
+        if: hashFiles('scripts/eval_harness.js') != ''
+        run: |
+          node scripts/eval_harness.js
 
       - name: Validate Prometheus & Grafana Specs
         run: |

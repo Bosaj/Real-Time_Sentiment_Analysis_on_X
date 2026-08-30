@@ -1,4 +1,9 @@
+import sys
+import os
 import pytest
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from monitoring.health import check_liveness, check_readiness, get_health_status
 from scripts.eval_harness import run_evaluation
 
