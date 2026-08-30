@@ -48,3 +48,12 @@ spark-events/
 \offsets
 \sources.wiki-staging/
 _site/
+
+
+# Local Environment & Staging Security
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+.wiki-staging
+temp_*
