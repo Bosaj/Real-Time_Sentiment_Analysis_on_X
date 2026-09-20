@@ -1,5 +1,9 @@
 # Real-Time_Sentiment_Analysis_on_X
 
+<p align="center">
+  <img src="assets/social_preview.jpg" alt="Real-Time_Sentiment_Analysis_on_X Banner" width="100%">
+</p>
+
 ![CI Pipeline](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/actions/workflows/ci_qa_monitoring.yml/badge.svg)
 [![GitHub Wiki](https://img.shields.io/badge/Documentation-GitHub%20Wiki-blue.svg)](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/wiki)
 [![Quality Gate](https://img.shields.io/badge/Quality%20Gate-Passed-brightgreen.svg)](docs/MONITORING_AND_QA.md)
