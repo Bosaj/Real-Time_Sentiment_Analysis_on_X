@@ -1,5 +1,8 @@
 # Real-Time_Sentiment_Analysis_on_X
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Bosaj/Real-Time_Sentiment_Analysis_on_X) [![GitHub release](https://img.shields.io/github/v/release/Bosaj/Real-Time_Sentiment_Analysis_on_X?color=blue&label=release)](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/releases) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+
+
 <p align="center">
   <img src="assets/social_preview.jpg" alt="Real-Time_Sentiment_Analysis_on_X Banner" width="100%">
 </p>
