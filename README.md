@@ -32,10 +32,13 @@
 ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
 
-- **ELHADJI Oussama**
-- **BEN ACHA Yassine**
-- **CHAKOR Abdellatif**
-- **MENACH Achraf**
+## 👥 Project Engineering Team
+
+This project was collaboratively engineered by:
+- **Oussama EL HADJI** — Machine Learning & Pipeline Architect ([GitHub @Bosaj](https://github.com/Bosaj) • [HF @bosaj](https://huggingface.co/bosaj))
+- **Yassine BEN ACHA** — Streaming & Data Infrastructure Engineer ([GitHub @yassine-benacha](https://github.com/yassine-benacha))
+- **Abdellatif CHAKOR** — Distributed Processing Engineer ([GitHub @chakorabdellatif](https://github.com/chakorabdellatif))
+- **Achraf MENACH** — Full-Stack & Persistence Engineer ([GitHub @AchrafMenach](https://github.com/AchrafMenach))
 
 ***
 
