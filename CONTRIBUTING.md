@@ -1,28 +1,31 @@
 # Contributing Guidelines
 
-Thank you for contributing! 🎉
-
-## How to Contribute
-
-### Reporting Bugs
-1. Check [Issues](../../issues) for existing reports
-2. Open a new issue: clear title, steps to reproduce, expected vs actual behavior
-
-### Pull Requests
-1. **Fork** → `git checkout -b feature/your-feature`
-2. **Commit**: `git commit -m "feat: description"`
-3. **Push** and open a **Pull Request** targeting `main`
-
-## Commit Convention ([Conventional Commits](https://www.conventionalcommits.org/))
-- `feat:` — new feature
-- `fix:` — bug fix
-- `docs:` — documentation
-- `refactor:` — refactoring
-- `test:` — tests
-- `chore:` — maintenance
+Thank you for your interest in contributing to this project!
 
 ## Code of Conduct
-We follow the [Contributor Covenant](https://www.contributor-covenant.org/).
 
----
-*Made with ❤️ by [@Bosaj](https://github.com/Bosaj)*
+By participating in this project, you agree to abide by the terms of our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Getting Started
+
+1. **Fork the Repository** on GitHub.
+2. **Clone your fork** locally:
+   ```bash
+   git clone https://github.com/Bosaj/<repo-name>.git
+   ```
+3. **Create a Feature Branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+## Development Workflow
+
+- Follow clean code practices, PEP 8 / ESLint formatting guidelines, and include relevant documentation for new features.
+- Ensure all automated tests pass before submitting changes.
+- Write clear, conventional commit messages (`feat: ...`, `fix: ...`, `docs: ...`).
+
+## Pull Request Process
+
+1. Push your changes to your fork.
+2. Open a Pull Request targeting the `main` branch.
+3. Provide a clear description of the problem solved, architectural choices made, and screenshots/logs if applicable.
