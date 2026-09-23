@@ -17,7 +17,6 @@
 
 ---
 
-[![CI](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/actions/workflows/ci.yml/badge.svg)](https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 🛠️ Tech Stack
@@ -36,7 +35,7 @@
 
 This project was collaboratively engineered by:
 - **Oussama EL HADJI** — Machine Learning & Pipeline Architect ([GitHub @Bosaj](https://github.com/Bosaj) • [HF @bosaj](https://huggingface.co/bosaj))
-- **Yassine BEN ACHA** — Streaming & Data Infrastructure Engineer ([GitHub @yassine-benacha](https://github.com/yassine-benacha))
+- **Yassine BEN ACHA** — Streaming & Data Infrastructure Engineer ([GitHub @yassine-benacha](https://github.com/yassine-ben-acha))
 - **Abdellatif CHAKOR** — Distributed Processing Engineer ([GitHub @chakorabdellatif](https://github.com/chakorabdellatif))
 - **Achraf MENACH** — Full-Stack & Persistence Engineer ([GitHub @AchrafMenach](https://github.com/AchrafMenach))
 
