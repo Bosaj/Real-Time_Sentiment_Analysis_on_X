@@ -32,8 +32,7 @@ model = load_model()
 
 if model is None:
     st.error(
-        "Model file not found. Run `python train_model.py` first to train "
-        "and save model/sentiment_pipeline.joblib."
+        "Model file not found. Run `python train_model.py` first to train and save model/sentiment_pipeline.joblib."
     )
 else:
     text = st.text_area(
@@ -49,13 +48,13 @@ else:
             prediction = model.predict([text])[0]
             proba = model.predict_proba([text])[0]
             classes = model.named_steps["clf"].classes_
-            confidence = dict(zip(classes, proba))[prediction]
+            confidence = dict(zip(classes, proba, strict=False))[prediction]
 
             style, emoji = SENTIMENT_STYLE.get(prediction, ("info", ""))
             getattr(st, style)(f"{emoji} **{prediction}** (confidence: {confidence:.1%})")
 
             with st.expander("Full probability breakdown"):
-                st.bar_chart(dict(zip(classes, proba)))
+                st.bar_chart(dict(zip(classes, proba, strict=False)))
 
 st.divider()
 st.caption(

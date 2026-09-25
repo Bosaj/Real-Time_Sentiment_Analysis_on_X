@@ -407,8 +407,8 @@ Python worker failed to connect back
 **Solution:**
 Add to your script:
 ```python
-os.environ['PYSPARK_PYTHON'] = 'path/to/python.exe'
-os.environ['PYSPARK_DRIVER_PYTHON'] = 'path/to/python.exe'
+os.environ["PYSPARK_PYTHON"] = "path/to/python.exe"
+os.environ["PYSPARK_DRIVER_PYTHON"] = "path/to/python.exe"
 ```
 
 ### Issue 3: MongoDB Connection Failed

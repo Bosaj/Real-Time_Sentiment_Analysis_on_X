@@ -11,6 +11,7 @@ architecture (see README) when that infrastructure is available.
 Run: python train_model.py
 Produces: model/sentiment_pipeline.joblib
 """
+
 from pathlib import Path
 
 import joblib
@@ -36,10 +37,15 @@ def main():
     train = load_split("X_training.csv")
     val = load_split("X_validation.csv")
 
-    pipeline = Pipeline([
-        ("tfidf", TfidfVectorizer(max_features=20000, ngram_range=(1, 2), stop_words="english")),
-        ("clf", LogisticRegression(max_iter=1000, C=5)),
-    ])
+    pipeline = Pipeline(
+        [
+            (
+                "tfidf",
+                TfidfVectorizer(max_features=20000, ngram_range=(1, 2), stop_words="english"),
+            ),
+            ("clf", LogisticRegression(max_iter=1000, C=5)),
+        ]
+    )
     pipeline.fit(train["Content"], train["Sentiment"])
 
     pred = pipeline.predict(val["Content"])

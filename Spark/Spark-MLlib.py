@@ -1,31 +1,41 @@
 import os
-os.environ['HADOOP_HOME'] = r"C:\Users\ROG FLOW\hadoop"
-os.environ['hadoop.home.dir'] = r"C:\Users\ROG FLOW\hadoop"
-os.environ["PATH"] += os.pathsep + os.path.join(os.environ['HADOOP_HOME'], 'bin')
 
-from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType
-from pyspark.ml.feature import Tokenizer, StopWordsRemover, HashingTF, IDF, StringIndexer
+os.environ["HADOOP_HOME"] = r"C:\Users\ROG FLOW\hadoop"
+os.environ["HADOOP.HOME.DIR"] = r"C:\Users\ROG FLOW\hadoop"
+os.environ["PATH"] += os.pathsep + os.path.join(os.environ["HADOOP_HOME"], "bin")
+
 from pyspark.ml.classification import LogisticRegression, NaiveBayes
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
-from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
+from pyspark.ml.feature import (
+    IDF,
+    HashingTF,
+    StopWordsRemover,
+    StringIndexer,
+    Tokenizer,
+)
+from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
+from pyspark.sql import SparkSession
+from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 
-spark = SparkSession.builder \
-    .appName("SentimentAnalysis") \
-    .master("local[*]") \
-    .config("spark.executor.memory", "4g") \
-    .config("spark.driver.memory", "4g") \
-    .config("spark.sql.shuffle.partitions", "20") \
-    .config("spark.default.parallelism", "20") \
-    .config("spark.driver.maxResultSize", "4g") \
+spark = (
+    SparkSession.builder.appName("SentimentAnalysis")
+    .master("local[*]")
+    .config("spark.executor.memory", "4g")
+    .config("spark.driver.memory", "4g")
+    .config("spark.sql.shuffle.partitions", "20")
+    .config("spark.default.parallelism", "20")
+    .config("spark.driver.maxResultSize", "4g")
     .getOrCreate()
+)
 
-schema = StructType([
-    StructField("TweetID", IntegerType(), True),
-    StructField("Entity", StringType(), True),
-    StructField("Sentiment", StringType(), True),
-    StructField("Content", StringType(), True)
-])
+schema = StructType(
+    [
+        StructField("TweetID", IntegerType(), True),
+        StructField("Entity", StringType(), True),
+        StructField("Sentiment", StringType(), True),
+        StructField("Content", StringType(), True),
+    ]
+)
 
 df = spark.read.csv("X_training.csv", header=False, schema=schema)
 df = df.repartition(20)
@@ -50,48 +60,39 @@ df_final = indexer_model.transform(rescaledData)
 
 train_data, test_data = df_final.randomSplit([0.8, 0.2], seed=1234)
 
-lr = LogisticRegression(featuresCol='features', labelCol='label')
-paramGrid_lr = (ParamGridBuilder()
-             .addGrid(lr.regParam, [0.01])  
-             .addGrid(lr.elasticNetParam, [0.0]) 
-             .addGrid(lr.maxIter, [10]) 
-             .build())
+lr = LogisticRegression(featuresCol="features", labelCol="label")
+paramGrid_lr = (
+    ParamGridBuilder().addGrid(lr.regParam, [0.01]).addGrid(lr.elasticNetParam, [0.0]).addGrid(lr.maxIter, [10]).build()
+)
 evaluator_lr = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy")
-crossval_lr = CrossValidator(estimator=lr,
-                          estimatorParamMaps=paramGrid_lr,
-                          evaluator=evaluator_lr,
-                          numFolds=3)  
+crossval_lr = CrossValidator(estimator=lr, estimatorParamMaps=paramGrid_lr, evaluator=evaluator_lr, numFolds=3)
 cvModel_lr = crossval_lr.fit(train_data)
 predictions_lr = cvModel_lr.transform(test_data)
 accuracy_lr = evaluator_lr.evaluate(predictions_lr)
-print("Logistic Regression Accuracy: %f" % accuracy_lr)
+print(f"Logistic Regression Accuracy: {accuracy_lr:f}")
 bestModel_lr = cvModel_lr.bestModel
 print("Best model parameters for Logistic Regression:")
 print("regParam:", bestModel_lr._java_obj.getRegParam())
 print("elasticNetParam:", bestModel_lr._java_obj.getElasticNetParam())
 print("maxIter:", bestModel_lr._java_obj.getMaxIter())
 
-nb = NaiveBayes(featuresCol='features', labelCol='label')
-paramGrid_nb = (ParamGridBuilder()
-             .addGrid(nb.smoothing, [0.0, 1.0, 2.0])  
-             .build())
+nb = NaiveBayes(featuresCol="features", labelCol="label")
+paramGrid_nb = ParamGridBuilder().addGrid(nb.smoothing, [0.0, 1.0, 2.0]).build()
 evaluator_nb = MulticlassClassificationEvaluator(labelCol="label", predictionCol="prediction", metricName="accuracy")
-crossval_nb = CrossValidator(estimator=nb,
-                          estimatorParamMaps=paramGrid_nb,
-                          evaluator=evaluator_nb,
-                          numFolds=3)  
+crossval_nb = CrossValidator(estimator=nb, estimatorParamMaps=paramGrid_nb, evaluator=evaluator_nb, numFolds=3)
 cvModel_nb = crossval_nb.fit(train_data)
 predictions_nb = cvModel_nb.transform(test_data)
 accuracy_nb = evaluator_nb.evaluate(predictions_nb)
-print("Naive Bayes Classifier Accuracy: %f" % accuracy_nb)
+print(f"Naive Bayes Classifier Accuracy: {accuracy_nb:f}")
 bestModel_nb = cvModel_nb.bestModel
 print("Best model parameters for Naive Bayes:")
 print("Smoothing parameter:", bestModel_nb._java_obj.getSmoothing())
 
 with open("sentiment_to_index_mapping.txt", "w") as file:
     labels_to_index = indexer_model.labels
-    for index, label in enumerate(labels_to_index):
-        file.write(f"Numeric index {index} corresponds to Sentiment: '{label}'\n")
+    file.writelines(
+        f"Numeric index {index} corresponds to Sentiment: '{label}'\n" for index, label in enumerate(labels_to_index)
+    )
 
 bestModel_lr.write().overwrite().save("V1")
 cvModel_nb.write().overwrite().save("NaiveBayes_Model_V1")

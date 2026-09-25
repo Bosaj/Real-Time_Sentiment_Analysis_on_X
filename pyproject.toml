@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = [
+    ".git",
+    ".venv",
+    ".venv-tf",
+    "node_modules",
+    "__pycache__",
+    "*.ipynb",
+    "notebooks",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501", "B008"]

@@ -1,12 +1,13 @@
-import logging
 import json
+import logging
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
         log_obj = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "module": record.module,
             "message": record.getMessage(),
@@ -14,6 +15,7 @@ class JsonFormatter(logging.Formatter):
         if record.exc_info:
             log_obj["exception"] = self.formatException(record.exc_info)
         return json.dumps(log_obj)
+
 
 def setup_logger(name=__name__, level=logging.INFO):
     logger = logging.getLogger(name)
@@ -23,5 +25,6 @@ def setup_logger(name=__name__, level=logging.INFO):
         handler.setFormatter(JsonFormatter())
         logger.addHandler(handler)
     return logger
+
 
 logger = setup_logger()

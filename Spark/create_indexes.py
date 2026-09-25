@@ -1,7 +1,9 @@
-from pymongo import MongoClient, ASCENDING, DESCENDING
 import os
-from dotenv import load_dotenv
+import sys
+
 import certifi
+from dotenv import load_dotenv
+from pymongo import ASCENDING, DESCENDING, MongoClient
 
 # Load environment variables
 load_dotenv()
@@ -9,7 +11,7 @@ uri = os.getenv("MONGO_URI")
 
 if not uri:
     print("Error: MONGO_URI not found in environment variables.")
-    exit(1)
+    sys.exit(1)
 
 print("Connecting to MongoDB...")
 client = MongoClient(uri, tlsCAFile=certifi.where())
