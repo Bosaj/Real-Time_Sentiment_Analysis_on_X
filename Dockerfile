@@ -20,7 +20,7 @@ ENV SPARK_HOME /spark
 ENV PATH $PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
 
 # Install Jupyter
-RUN pip3 install jupyter pyspark
+RUN pip3 install --no-cache-dir --break-system-packages jupyter pyspark
 
 # Expose Jupyter and Spark UI ports
 EXPOSE 8888 4040 8080
