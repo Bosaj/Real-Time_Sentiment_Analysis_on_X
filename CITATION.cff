@@ -3,8 +3,8 @@ message: "If you use this software, please cite it using the metadata from this 
 title: "Real Time Sentiment Analysis On X"
 abstract: "Distributed Real-Time NLP & Sentiment Analytics Pipeline on Social Feeds using Apache Kafka, PySpark, and Fine-Tuned RoBERTa."
 authors:
-  - family-names: "Oussous"
-    given-names: "El Hadji"
+  - family-names: "EL HADJI"
+    given-names: "Oussama"
     alias: "Bosaj"
     email: "oussousselhadji@gmail.com"
 repository-code: "https://github.com/Bosaj/Real-Time_Sentiment_Analysis_on_X"

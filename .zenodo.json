@@ -1,9 +1,9 @@
 {
   "title": "Real Time Sentiment Analysis On X: Distributed Real-Time NLP & Sentiment Analytics Pipeline on Social Feeds using Apache Kafka, PySpark, and Fine-Tuned RoBERTa.",
-  "description": "<p>Distributed Real-Time NLP & Sentiment Analytics Pipeline on Social Feeds using Apache Kafka, PySpark, and Fine-Tuned RoBERTa.</p><p>Authored and maintained by Bosaj (El Hadji Oussous).</p>",
+  "description": "<p>Distributed Real-Time NLP & Sentiment Analytics Pipeline on Social Feeds using Apache Kafka, PySpark, and Fine-Tuned RoBERTa.</p><p>Authored and maintained by Bosaj (Oussama EL HADJI).</p>",
   "creators": [
     {
-      "name": "Oussous, El Hadji",
+      "name": "EL HADJI, Oussama",
       "affiliation": "Software Engineer & AI Researcher",
       "orcid": ""
     }
