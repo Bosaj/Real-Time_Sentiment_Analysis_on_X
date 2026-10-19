@@ -1,0 +1,12 @@
+# Global Codeowners for this repository
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default global ownership assigned to project creator and lead engineer
+* @Bosaj
+
+# Core CI/CD, automation, and security policies
+/.github/ @Bosaj
+/.github/workflows/ @Bosaj
+/SECURITY.md @Bosaj
+/LICENSE @Bosaj
+/README.md @Bosaj
