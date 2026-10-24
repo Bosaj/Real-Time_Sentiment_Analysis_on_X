@@ -18,7 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Removed the tracked `.env` file from version control (it contained a live database connection string). `.env` is git-ignored going forward; only `.env.example` with placeholder values is tracked. **The previously committed credential should be rotated**, since it remains visible in this repository's git history.
 
-## [v1.0] - 2025-12-29
+## [1.0.0] - 2026-09-19
+
+### Added
+- Kafka ingestion, PySpark Structured Streaming with sliding windows, RoBERTa sentiment inference.
+
+## [0.1.0] - 2025-12-29
+
+Published as "v1.0" (not a SemVer version), then renumbered.
 
 Initial tagged release: end-to-end real-time sentiment analysis pipeline for Twitter/X streams.
 
