@@ -4,10 +4,10 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
-  "liveNow": false,
+  "liveNow": true,
   "panels": [
     {
       "id": 1,
@@ -41,11 +41,48 @@
           "legendFormat": "Quality Index"
         }
       ]
+    },
+    {
+      "id": 4,
+      "title": "Rolling Sentiment Index (-1.0 Negative to +1.0 Positive)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sentiment_rolling_index{window='300s'}",
+          "legendFormat": "Rolling Index (5m)"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Sentiment Velocity (/min) & Polarity Spike Z-Score",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sentiment_velocity_per_min{window='300s'}",
+          "legendFormat": "Velocity (/min)"
+        },
+        {
+          "expr": "sentiment_polarity_spike_zscore{window='300s'}",
+          "legendFormat": "Polarity Spike Z-Score"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Live Tweet Classification Throughput by Polarity",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum by (polarity) (rate(sentiment_predictions_total[5m]))",
+          "legendFormat": "{{polarity}}"
+        }
+      ]
     }
   ],
   "refresh": "5s",
   "schemaVersion": 38,
-  "title": "Real-Time_Sentiment_Analysis_on_X Observability Dashboard",
+  "title": "Real-Time_Sentiment_Analysis_on_X Observability & Live Sentiment Telemetry Dashboard",
   "uid": "real_time_sentiment_analysis_on_x_obs",
-  "version": 1
+  "version": 2
 }
